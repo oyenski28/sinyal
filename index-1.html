@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0B0E14">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Sinyal Trading v11 Final — Saham IDX & Crypto + Alert</title>
+<style>
+:root{
+  --bg:#0B0E14; --surface:#131825; --surface2:#0F1420; --line:#1F2736;
+  --text:#E8ECF4; --muted:#8A94A8;
+  --long:#2DD4A7; --short:#FF5C72; --wait:#F5B544;
+  --mono:'IBM Plex Mono','Courier New',monospace;
+  --sans:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:90px}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+
+header{padding:18px 0 6px}
+header h1{font-size:21px;letter-spacing:-.02em}
+header h1 span{color:var(--long)}
+header p{color:var(--muted);font-size:12px;margin-top:2px}
+
+.tabs{display:flex;gap:8px;margin:14px 0}
+.tab{flex:1;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--muted);font-size:14px;font-weight:600;text-align:center;cursor:pointer;transition:.15s}
+.tab.active{background:var(--surface);color:var(--text);border-color:#3A4860}
+
+.panel{display:none}.panel.show{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+label{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+select,input{width:100%;padding:13px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:16px;font-family:var(--mono)}
+select:focus,input:focus{outline:none;border-color:var(--long)}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.mt{margin-top:12px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:13px;font-family:var(--mono);cursor:pointer}
+.chip:active{background:var(--long);color:#06281F}
+
+button.go{width:100%;margin-top:14px;padding:15px;border:none;border-radius:12px;background:var(--long);color:#06281F;font-size:16px;font-weight:700;font-family:var(--sans);cursor:pointer}
+button.go:active{transform:scale(.98)}
+button.go:disabled{background:#23303F;color:var(--muted)}
+button.go.amber{background:var(--wait);color:#332200}
+
+.sig-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sig-name{font-size:17px;font-weight:700}
+.sig-price{font-family:var(--mono);font-size:15px;color:var(--muted)}
+.badge{display:inline-block;padding:8px 18px;border-radius:999px;font-weight:700;font-size:16px;letter-spacing:.05em;margin:10px 0 4px}
+.badge.long{background:rgba(45,212,167,.14);color:var(--long);border:1px solid rgba(45,212,167,.4)}
+.badge.short{background:rgba(255,92,114,.12);color:var(--short);border:1px solid rgba(255,92,114,.4)}
+.badge.wait{background:rgba(245,181,68,.12);color:var(--wait);border:1px solid rgba(245,181,68,.4)}
+.conf{font-size:12px;color:var(--muted);margin-bottom:8px}
+.src{font-size:11px;color:#5B6478;margin-top:2px}
+
+.ladder{margin:14px 0;border-left:2px solid var(--line)}
+.rung{display:flex;align-items:center;gap:10px;padding:9px 0}
+.rung::before{content:'';width:14px;height:2px;background:var(--line);margin-left:-1px}
+.rung .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;width:92px;color:var(--muted)}
+.rung .val{font-family:var(--mono);font-size:16px;font-weight:600}
+.rung.res .val{color:var(--short)}
+.rung.sup .val{color:var(--long)}
+.rung.entry{background:linear-gradient(90deg,rgba(245,181,68,.10),transparent);border-radius:0 10px 10px 0}
+.rung.entry .lbl,.rung.entry .val{color:var(--wait)}
+.rung.now .val{color:var(--text)}
+.rung.now::before{background:var(--text)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.stat{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px}
+.stat .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.stat .v{font-family:var(--mono);font-size:15px;font-weight:600;margin-top:3px}
+.stat .v.g{color:var(--long)}.stat .v.r{color:var(--short)}.stat .v.y{color:var(--wait)}
+
+/* IHSG mini card */
+.ihsg{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:14px}
+.ihsg .nm{font-size:13px;font-weight:700;color:var(--muted)}
+.ihsg .pv{font-family:var(--mono);font-size:17px;font-weight:700;margin-top:2px}
+.ihsg .tr{text-align:right;font-size:12px}
+.ihsg .tr b{font-size:14px;font-family:var(--mono)}
+.up{color:var(--long)}.dn{color:var(--short)}.fl{color:var(--wait)}
+
+/* alerts */
+.al-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:8px;font-size:13px}
+.al-item .s{font-family:var(--mono);font-weight:700}
+.al-item .lv{color:var(--muted);font-size:12px;margin-top:2px}
+.al-del{background:none;border:none;color:var(--short);font-size:18px;cursor:pointer;padding:4px 8px}
+.al-fire{background:rgba(245,181,68,.12);border:1px solid var(--wait);color:var(--wait);border-radius:12px;padding:12px;font-size:14px;font-weight:600;margin-top:10px;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.55}}
+.al-status{font-size:11px;color:#5B6478;margin-top:10px;line-height:1.5}
+
+/* watchlist */
+.wl-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:8px}
+.wl-row .info{flex:1;cursor:pointer;min-width:0}
+.wl-row .s{font-family:var(--mono);font-weight:700;font-size:14px}
+.wl-row .s small{color:#5B6478;font-weight:400}
+.wl-row .pr{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:2px}
+.wl-row .chg{font-family:var(--mono);font-size:14px;font-weight:700;text-align:right;min-width:74px}
+.wl-row.pin{border-color:#3A4860;background:linear-gradient(90deg,rgba(45,212,167,.05),var(--surface2))}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#22304A;color:var(--text);padding:11px 18px;border-radius:999px;font-size:13px;border:1px solid #3A4860;opacity:0;pointer-events:none;transition:.25s;z-index:99;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:12px}
+.alert{background:rgba(255,92,114,.08);border:1px solid rgba(255,92,114,.3);color:#FFB3BE;border-radius:12px;padding:12px;font-size:13px;margin-bottom:14px;line-height:1.5}
+.loading{text-align:center;color:var(--muted);padding:22px;font-size:14px}
+.disc{font-size:11px;color:#5B6478;line-height:1.6;margin-top:16px;padding:12px;border:1px dashed var(--line);border-radius:12px}
+.hide{display:none}
+.linkbtn{background:none;border:none;color:var(--wait);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:10px;font-family:var(--sans)}
+h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Sinyal<span>Trading</span> <small style="font-size:12px;color:#5B6478">v11 Final</small></h1>
+  <p>Saham IDX & crypto — sinyal, S/R, IHSG, dan price alert</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-t="crypto" onclick="swTab('crypto')">🪙 Crypto</div>
+  <div class="tab" data-t="saham" onclick="swTab('saham')">📈 IDX</div>
+  <div class="tab" data-t="meme" onclick="swTab('meme')">🚀 Meme</div>
+  <div class="tab" data-t="watch" onclick="swTab('watch')">⭐ List</div>
+</div>
+
+<!-- ============ CRYPTO ============ -->
+<div class="panel show" id="p-crypto">
+  <div class="card">
+    <label>Ketik nama koin</label>
+    <input id="c-sym" placeholder="contoh: BTC, SOL, PEPE" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="chips">
+      <div class="chip" onclick="pick('BTC')">BTC</div>
+      <div class="chip" onclick="pick('ETH')">ETH</div>
+      <div class="chip" onclick="pick('SOL')">SOL</div>
+      <div class="chip" onclick="pick('BNB')">BNB</div>
+      <div class="chip" onclick="pick('XRP')">XRP</div>
+      <div class="chip" onclick="pick('DOGE')">DOGE</div>
+    </div>
+    <div class="mt">
+      <label>Timeframe</label>
+      <select id="c-tf">
+        <option value="1h">1 Jam (scalping)</option>
+        <option value="4h" selected>4 Jam (swing)</option>
+        <option value="1d">1 Hari (posisi)</option>
+      </select>
+    </div>
+    <button class="go" id="c-go" onclick="runCrypto()">Analisa Sekarang</button>
+  </div>
+  <div id="c-out"></div>
+</div>
+
+<!-- ============ SAHAM ============ -->
+<div class="panel" id="p-saham">
+  <div id="ihsg-box"></div>
+  <div class="card">
+    <label>Kode saham IDX</label>
+    <input id="s-sym" placeholder="contoh: PGAS, BBCA, TPIA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="chips">
+      <div class="chip" onclick="picks('PGAS')">PGAS</div>
+      <div class="chip" onclick="picks('TPIA')">TPIA</div>
+      <div class="chip" onclick="picks('BBCA')">BBCA</div>
+      <div class="chip" onclick="picks('BBRI')">BBRI</div>
+    </div>
+    <div class="row mt">
+      <div><button class="go" style="margin-top:0" onclick="runTopPicks()">🏆 Top Picks Hari Ini</button></div>
+      <div><button class="go" style="margin-top:0;background:#2A3650;color:var(--text)" onclick="runLongTerm()">🏛️ Jangka Panjang</button></div>
+    </div>
+    <button class="go" id="s-go" onclick="runSaham()">Analisa Sekarang</button>
+    <button class="linkbtn" onclick="toggleManual()">Semua jalur data gagal? Input manual di sini</button>
+  </div>
+
+  <div class="card hide" id="s-manual">
+    <label style="margin-bottom:10px">Input manual (lihat angkanya di aplikasi sekuritas kamu)</label>
+    <div class="row">
+      <div><label>Harga sekarang</label><input id="m-last" type="number" inputmode="numeric" placeholder="1600"></div>
+      <div><label>Close kemarin</label><input id="m-close" type="number" inputmode="numeric" placeholder="1580"></div>
+    </div>
+    <div class="row mt">
+      <div><label>High kemarin</label><input id="m-high" type="number" inputmode="numeric" placeholder="1620"></div>
+      <div><label>Low kemarin</label><input id="m-low" type="number" inputmode="numeric" placeholder="1550"></div>
+    </div>
+    <div class="mt">
+      <label>Tren minggu ini</label>
+      <select id="m-trend">
+        <option value="1">Naik (uptrend)</option>
+        <option value="0" selected>Datar / sideways</option>
+        <option value="-1">Turun (downtrend)</option>
+      </select>
+    </div>
+    <button class="go" onclick="runManual()">Analisa Manual</button>
+  </div>
+
+  <div id="s-out"></div>
+</div>
+
+<!-- ============ MEME DEX ============ -->
+<div class="panel" id="p-meme">
+  <div class="alert" style="background:rgba(245,181,68,.08);border-color:rgba(245,181,68,.35);color:#FFE2A8">⚠️ <b>Zona risiko ekstrem.</b> Mayoritas meme coin di DEX berakhir nol atau kena rug pull, dan TIDAK ADA alat yang bisa mendeteksi honeypot/rug hanya dari data harga. Skor di bawah cuma penyaring risiko, bukan jaminan. Anggap uang yang masuk ke sini siap hangus 100% — jangan pernah pakai dana kebutuhan keluarga.</div>
+  <div class="card">
+    <div class="row">
+      <div><label>Jaringan</label>
+        <select id="d-net">
+          <option value="">Semua chain</option>
+          <option value="solana">Solana</option>
+          <option value="base">Base</option>
+          <option value="eth">Ethereum</option>
+          <option value="bsc">BSC</option>
+        </select>
+      </div>
+      <div><label>Mode</label>
+        <select id="d-mode">
+          <option value="gems" selected>🌱 Baru & berpotensi (saringan ketat)</option>
+          <option value="alpha">🎯 Alpha scan (akselerasi volume)</option>
+          <option value="trending">🔥 Trending</option>
+          <option value="new">🆕 Baru listing (tanpa saringan)</option>
+        </select>
+      </div>
+    </div>
+    <button class="go" id="d-go" onclick="runMeme()">Scan Meme Coin</button>
+    <div class="mt">
+      <label>Atau cek satu token (paste contract address / nama)</label>
+      <input id="d-q" placeholder="alamat kontrak atau nama token" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="go amber" onclick="checkToken()">Cek Token Ini</button>
+    </div>
+  </div>
+  <div id="d-out"></div>
+</div>
+
+<!-- ============ WATCHLIST ============ -->
+<div class="panel" id="p-watch">
+  <div class="card">
+    <div class="sig-head">
+      <div class="sig-name">⭐ Watchlist</div>
+      <div class="src" id="wl-status">—</div>
+    </div>
+    <div id="wl-sum" class="conf"></div>
+    <div id="wl-ihsg"></div>
+    <div id="wl-out"></div>
+    <button class="go" id="wl-go" onclick="refreshWatch()">🔄 Refresh Semua Harga</button>
+  </div>
+  <div class="card">
+    <label>Tambah simbol manual</label>
+    <div class="row">
+      <div style="flex:0 0 110px">
+        <select id="wl-type"><option value="crypto">Crypto</option><option value="saham">Saham</option></select>
+      </div>
+      <div><input id="wl-sym" placeholder="BTC / PGAS" autocapitalize="characters" autocomplete="off"></div>
+    </div>
+    <button class="go amber" onclick="addWatchManual()">⭐ Tambah</button>
+    <div class="note">Tips: token meme ditambahkan lewat tombol ⭐ di kartu hasil scan tab Meme. Tap baris mana pun di watchlist untuk langsung analisa lengkap.</div>
+  </div>
+</div>
+
+<!-- ============ PRICE ALERT ============ -->
+<h2 class="sec">🔔 Price Alert (breakout / breakdown)</h2>
+<div class="card">
+  <div id="al-fired"></div>
+  <div class="row">
+    <div style="flex:0 0 110px">
+      <label>Jenis</label>
+      <select id="al-type"><option value="crypto">Crypto</option><option value="saham">Saham</option></select>
+    </div>
+    <div>
+      <label>Simbol</label>
+      <input id="al-sym" placeholder="BTC / PGAS" autocapitalize="characters" autocomplete="off">
+    </div>
+  </div>
+  <div class="row mt">
+    <div><label>Breakout ≥ (atas)</label><input id="al-up" type="number" inputmode="decimal" placeholder="opsional"></div>
+    <div><label>Breakdown ≤ (bawah)</label><input id="al-dn" type="number" inputmode="decimal" placeholder="opsional"></div>
+  </div>
+  <button class="go amber" onclick="addAlert()">Pasang Alert</button>
+  <div id="al-list"></div>
+  <div class="al-status" id="al-status">Belum ada alert aktif.</div>
+</div>
+
+<!-- ============ JURNAL TRADING ============ -->
+<h2 class="sec">📓 Jurnal Trading</h2>
+<div class="card">
+  <div id="j-stats"></div>
+  <div class="row">
+    <div><label>Simbol</label><input id="j-sym" placeholder="PGAS / BTC" autocapitalize="characters" autocomplete="off"></div>
+    <div style="flex:0 0 100px"><label>Arah</label><select id="j-dir"><option value="L">Long</option><option value="S">Short</option></select></div>
+  </div>
+  <div class="row mt">
+    <div><label>Harga entry</label><input id="j-in" type="number" inputmode="decimal" placeholder="1600"></div>
+    <div><label>Harga exit</label><input id="j-out" type="number" inputmode="decimal" placeholder="1750"></div>
+  </div>
+  <div class="row mt">
+    <div><label>Nilai posisi (Rp / $)</label><input id="j-size" type="number" inputmode="decimal" placeholder="opsional"></div>
+    <div><label>Catatan</label><input id="j-note" placeholder="opsional"></div>
+  </div>
+  <button class="go" onclick="addJournal()">💾 Simpan Trade</button>
+  <div id="j-list"></div>
+  <button class="go" style="background:#2A3650;color:var(--text)" onclick="exportJournal()">⬇️ Export CSV</button>
+  <div class="note">Catat SEMUA trade, yang rugi juga — jurnal yang cuma diisi yang cuan itu bohong ke diri sendiri. Setelah ±20 trade, statistik di atas mulai jujur cerita strategi mana yang beneran jalan.</div>
+</div>
+
+<!-- ============ BACKUP & RESTORE ============ -->
+<h2 class="sec">💾 Backup & Restore</h2>
+<div class="card">
+  <div class="conf" id="bk-status">—</div>
+  <div class="row">
+    <div><button class="go" style="margin-top:0" onclick="exportBackup()">⬆️ Export Backup</button></div>
+    <div><button class="go" style="margin-top:0;background:#2A3650;color:var(--text)" onclick="$('bk-file').click()">⬇️ Import Backup</button></div>
+  </div>
+  <input type="file" id="bk-file" accept=".json,application/json" class="hide" onchange="importBackup(this)">
+  <div class="note">Semua data aplikasi (jurnal, watchlist, alert, setting modal) tersimpan di browser HP ini. Kalau Chrome dihapus datanya atau ganti HP, semuanya hilang. <b>Export backup rutin</b> (misal tiap Minggu) dan simpan file JSON-nya di Google Drive atau kirim ke WA kamu sendiri. Import di HP baru langsung balikin semuanya.</div>
+</div>
+
+<div class="disc">⚠️ <b>Disclaimer:</b> Aplikasi ini adalah alat bantu analisa teknikal otomatis, BUKAN saran finansial dan BUKAN jaminan prediksi. Pasar bisa bergerak di luar perkiraan. Selalu pakai uang dingin, manajemen risiko maksimal 1–2% per trade, dan keputusan akhir ada di tangan kamu sendiri.</div>
+</div>
+
+<script>
+/* ================= UTIL ================= */
+const $=id=>document.getElementById(id);
+function swTab(t){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.t===t));
+  $('p-crypto').classList.toggle('show',t==='crypto');
+  $('p-saham').classList.toggle('show',t==='saham');
+  $('p-meme').classList.toggle('show',t==='meme');
+  $('p-watch').classList.toggle('show',t==='watch');
+  if(t==='saham')loadIHSG();
+  if(t==='watch'&&watch.length&&(!lastRef||Date.now()-lastRef>60000))refreshWatch();
+}
+function toast(m){
+  let t=$('toast');
+  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}
+  t.textContent=m;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function fmtTiny(n){ // harga meme bisa 0.0000000123
+  if(n>=1)return fmtC(n);
+  if(!(n>0))return '0';
+  const d=Math.min(12,Math.max(2,4-Math.floor(Math.log10(n))));
+  return n.toFixed(d).replace(/0+$/,'').replace(/\.$/,'');
+}
+function fmtUsd(v){ // ringkas: $1.2jt / $340rb
+  if(v>=1e6)return '$'+(v/1e6).toFixed(2)+'jt';
+  if(v>=1e3)return '$'+(v/1e3).toFixed(0)+'rb';
+  return '$'+Math.round(v);
+}
+function fmtAge(h){
+  if(h==null)return '—';
+  if(h<48)return h.toFixed(0)+' jam';
+  return (h/24).toFixed(0)+' hari';
+}
+function esc(s){return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}
+function pick(s){$('c-sym').value=s;runCrypto()}
+function picks(s){$('s-sym').value=s;runSaham()}
+function toggleManual(){$('s-manual').classList.toggle('hide')}
+
+function fmtC(n){
+  if(n>=1000)return n.toLocaleString('en-US',{maximumFractionDigits:1});
+  if(n>=1)return n.toLocaleString('en-US',{maximumFractionDigits:3});
+  return n.toPrecision(4);
+}
+function fmtR(n){return 'Rp'+Math.round(n).toLocaleString('id-ID')}
+function tick(p){if(p<200)return 1;if(p<500)return 2;if(p<2000)return 5;if(p<5000)return 10;return 25}
+function roundTick(p){const t=tick(p);return Math.round(p/t)*t}
+function fetchT(url,opt,ms=10000){
+  return Promise.race([
+    fetch(url,opt||{}),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+  ]);
+}
+const store={
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ================= INDIKATOR (untuk data candle penuh) ================= */
+function ema(arr,n){
+  const k=2/(n+1);let e=arr.slice(0,n).reduce((a,b)=>a+b,0)/n;const out=[];
+  for(let i=0;i<arr.length;i++){ if(i<n){out.push(null);continue} e=arr[i]*k+e*(1-k);out.push(e);}
+  return out;
+}
+function rsiF(c,n=14){
+  let g=0,l=0;
+  for(let i=1;i<=n;i++){const d=c[i]-c[i-1];if(d>0)g+=d;else l-=d}
+  g/=n;l/=n;
+  for(let i=n+1;i<c.length;i++){const d=c[i]-c[i-1];g=(g*(n-1)+(d>0?d:0))/n;l=(l*(n-1)+(d<0?-d:0))/n}
+  return l===0?100:100-100/(1+g/l);
+}
+function atrF(h,l,c,n=14){
+  const tr=[];
+  for(let i=1;i<c.length;i++)tr.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));
+  let a=tr.slice(0,n).reduce((x,y)=>x+y,0)/n;
+  for(let i=n;i<tr.length;i++)a=(a*(n-1)+tr[i])/n;
+  return a;
+}
+function pivots(H,L,C){
+  const P=(H+L+C)/3;
+  return {P,R1:2*P-L,S1:2*P-H,R2:P+(H-L),S2:P-(H-L)};
+}
+/* cek apakah level pivot masuk akal relatif ke harga sekarang */
+function sanePivot(pv,last){
+  if(!pv)return false;
+  const vals=[pv.S2,pv.S1,pv.P,pv.R1,pv.R2];
+  if(!vals.every(v=>typeof v==='number'&&isFinite(v)))return false;
+  return pv.S2>0 && pv.S2<pv.S1 && pv.S1<pv.P && pv.P<pv.R1 && pv.R1<pv.R2
+    && pv.S1>last*0.6 && pv.R1<last*1.6
+    && pv.S1<last*1.05 && pv.R1>last*0.95;
+}
+/* cadangan: S/R sintetis berbasis volatilitas (ATR) — selalu masuk akal */
+function atrPivot(last,A){
+  return {P:last,
+    R1:last+A, R2:last+2*A,
+    S1:Math.max(last-A,last*0.7), S2:Math.max(last-2*A,last*0.55)};
+}
+
+/* analisa dari riwayat candle */
+function analyzeHist(h,l,c,cap){
+  const last=c[c.length-1];
+  const e20=ema(c,20),e50=ema(c,50);
+  const E20=e20[e20.length-1],E50=e50[e50.length-1];
+  const R=rsiF(c),A=atrF(h,l,c);
+  const mom=(last-c[c.length-6])/c[c.length-6]*100;
+  let pv=pivots(h[h.length-2],l[l.length-2],c[c.length-2]);
+  if(!sanePivot(pv,last))pv=atrPivot(last,A);
+  let score=0,reasons=[];
+  if(E20>E50){score++;reasons.push('EMA20 di atas EMA50 (tren naik)')}else{score--;reasons.push('EMA20 di bawah EMA50 (tren turun)')}
+  if(last>E20){score++;reasons.push('Harga di atas EMA20')}else{score--;reasons.push('Harga di bawah EMA20')}
+  if(R<32){score++;reasons.push('RSI '+R.toFixed(0)+' — oversold, potensi mantul')}
+  else if(R>68){score--;reasons.push('RSI '+R.toFixed(0)+' — overbought, rawan koreksi')}
+  else reasons.push('RSI '+R.toFixed(0)+' — netral');
+  if(mom>1.5){score++;reasons.push('Momentum 5 bar positif ('+mom.toFixed(1)+'%)')}
+  else if(mom<-1.5){score--;reasons.push('Momentum 5 bar negatif ('+mom.toFixed(1)+'%)')}
+  return buildPlan(last,R,A,pv,score,reasons,cap);
+}
+
+/* analisa dari snapshot TradingView (indikator sudah dihitung server) */
+function analyzeTV(d,cap){
+  const last=d.close;
+  let A=d.ATR;
+  if(!A||!isFinite(A)||A<=0)A=(d.high&&d.low&&d.high>d.low)?(d.high-d.low):last*0.02;
+  A=Math.min(A,last*0.2);          // ATR ekstrem (saham habis ARB/ARA) dibatasi 20%
+  A=Math.max(A,last*0.005);
+  // pivot bulanan TV sering ekstrem → validasi dulu, kalau gagal pakai pivot intraday, lalu ATR
+  let pv=null;
+  if(d.pP&&d.pS1&&d.pR1)pv={P:d.pP,S1:d.pS1,S2:d.pS2||2*d.pS1-d.pP,R1:d.pR1,R2:d.pR2||2*d.pR1-d.pP};
+  if(!sanePivot(pv,last)){
+    pv=(d.high&&d.low&&d.high>d.low)?pivots(d.high,d.low,last):null;
+    if(!sanePivot(pv,last))pv=atrPivot(last,A);
+  }
+  let score=0,reasons=[];
+  if(d.rec!=null){
+    if(d.rec>0.3){score+=2;reasons.push('Konsensus 26 indikator TradingView: BELI KUAT')}
+    else if(d.rec>0.1){score++;reasons.push('Konsensus indikator TradingView: Beli')}
+    else if(d.rec<-0.3){score-=2;reasons.push('Konsensus 26 indikator TradingView: JUAL KUAT')}
+    else if(d.rec<-0.1){score--;reasons.push('Konsensus indikator TradingView: Jual')}
+    else reasons.push('Konsensus indikator TradingView: Netral');
+  }
+  if(d.EMA20&&d.EMA50){
+    if(d.EMA20>d.EMA50){score++;reasons.push('EMA20 di atas EMA50 (tren naik)')}
+    else{score--;reasons.push('EMA20 di bawah EMA50 (tren turun)')}
+  }
+  if(d.EMA20){
+    if(last>d.EMA20){score++;reasons.push('Harga di atas EMA20')}
+    else{score--;reasons.push('Harga di bawah EMA20')}
+  }
+  const R=d.RSI;
+  if(R!=null){
+    if(R<32){score++;reasons.push('RSI '+R.toFixed(0)+' — oversold')}
+    else if(R>68){score--;reasons.push('RSI '+R.toFixed(0)+' — overbought')}
+    else reasons.push('RSI '+R.toFixed(0)+' — netral');
+  }
+  if(d.change!=null)reasons.push('Perubahan hari ini: '+d.change.toFixed(2)+'%');
+  return buildPlan(last,R,A,pv,score,reasons,cap);
+}
+
+function buildPlan(last,R,A,pv,score,reasons,cap){
+  cap=cap||0.15; // jarak SL maksimum dari entry (10% saham, 15% crypto)
+  let dir=score>=2?'LONG':(score<=-2?'SHORT':'WAIT');
+  const conf=Math.min(95,55+Math.abs(score)*8);
+  let entry,sl,tp1,tp2;
+  if(dir==='SHORT'){
+    entry=last;
+    sl=Math.max(entry+1.5*A,pv.R1);
+    if(sl-entry>entry*cap)sl=entry*(1+cap);          // SL kejauhan → batasi
+    tp1=entry-1.5*(sl-entry);tp2=entry-2.5*(sl-entry);
+    tp1=Math.max(tp1,entry*0.05);tp2=Math.max(tp2,entry*0.05);
+  }else{
+    if(dir==='LONG'){entry=last;sl=Math.min(entry-1.5*A,pv.S1)}
+    else{entry=pv.S1;sl=pv.S2}                        // WAIT: rencana beli di support
+    if(entry-sl>entry*cap)sl=entry*(1-cap);          // SL kejauhan → batasi
+    if(sl<=0||sl>=entry)sl=entry*(1-cap);            // SL minus/terbalik → perbaiki
+    const risk=entry-sl;
+    if(dir==='LONG'){tp1=entry+1.5*risk;tp2=entry+2.5*risk}
+    else{tp1=Math.max(pv.P,entry+1.5*risk);tp2=Math.max(pv.R1,entry+2.5*risk)}
+  }
+  const lo=Math.max(last-1.8*A,last*0.6), hi=last+1.8*A;
+  return {last,R:(R==null?null:R),A,pv,score,dir,conf,reasons,entry,sl,tp1,tp2,lo,hi};
+}
+
+/* ================= RENDER ================= */
+function render(out,name,a,fmt,isStock,src,alertSym,alertType){
+  const f=isStock?(x=>fmtR(roundTick(x))):fmt;
+  const badge=a.dir==='LONG'?'<span class="badge long">▲ LONG / BELI</span>'
+    :a.dir==='SHORT'?'<span class="badge short">▼ SHORT / JUAL</span>'
+    :'<span class="badge wait">⏸ TUNGGU / SIDEWAYS</span>';
+  const planLbl=a.dir==='WAIT'?'Rencana kalau harga turun ke support:':'Rencana trading:';
+  $(out).innerHTML=`
+  <div class="card">
+    <div class="sig-head"><div class="sig-name">${name}</div><div class="sig-price">${fmt(a.last)}</div></div>
+    ${badge}
+    <div class="conf">Keyakinan sinyal: <b>${a.conf}%</b> (skor ${a.score>0?'+':''}${a.score})</div>
+    ${src?'<div class="src">Sumber data: '+src+'</div>':''}
+    <div class="ladder">
+      <div class="rung res"><div class="lbl">Resistance 2</div><div class="val">${f(a.pv.R2)}</div></div>
+      <div class="rung res"><div class="lbl">Resistance 1</div><div class="val">${f(a.pv.R1)}</div></div>
+      <div class="rung now"><div class="lbl">Harga skrg</div><div class="val">${fmt(a.last)}</div></div>
+      <div class="rung entry"><div class="lbl">Pivot</div><div class="val">${f(a.pv.P)}</div></div>
+      <div class="rung sup"><div class="lbl">Support 1</div><div class="val">${f(a.pv.S1)}</div></div>
+      <div class="rung sup"><div class="lbl">Support 2</div><div class="val">${f(a.pv.S2)}</div></div>
+    </div>
+    <label>${planLbl}</label>
+    <div class="grid2">
+      <div class="stat"><div class="k">Entry</div><div class="v y">${f(a.entry)}</div></div>
+      <div class="stat"><div class="k">Stop Loss</div><div class="v r">${f(a.sl)}</div></div>
+      <div class="stat"><div class="k">Target 1 (TP1)</div><div class="v g">${f(a.tp1)}</div></div>
+      <div class="stat"><div class="k">Target 2 (TP2)</div><div class="v g">${f(a.tp2)}</div></div>
+    </div>
+    ${posBoxHTML(out,a.entry,a.sl,isStock)}
+    <label class="mt">Prediksi rentang harga (±1 periode ke depan)</label>
+    <div class="grid2">
+      <div class="stat"><div class="k">Skenario bawah</div><div class="v r">${f(a.lo)}</div></div>
+      <div class="stat"><div class="k">Skenario atas</div><div class="v g">${f(a.hi)}</div></div>
+    </div>
+    <div class="grid2">
+      <div class="stat"><div class="k">RSI (14)</div><div class="v ${a.R>68?'r':a.R<32?'g':''}">${a.R==null?'—':a.R.toFixed(1)}</div></div>
+      <div class="stat"><div class="k">Volatilitas (ATR)</div><div class="v">${fmt(a.A)}</div></div>
+    </div>
+    <div class="note"><b>Alasan sinyal:</b><br>• ${a.reasons.join('<br>• ')}</div>
+    <button class="go" style="background:#2A3650;color:var(--text)" onclick="addWatch('${alertSym}','${alertType}')">⭐ Simpan ke watchlist</button>
+    <button class="go" style="background:#2A3650;color:var(--text)" onclick="fillJournal('${alertSym}',${a.entry})">📓 Catat ke jurnal</button>
+    <button class="go" style="background:#2A3650;color:var(--text)" onclick="shareAnalysis('${out}')">📤 Share ke WhatsApp</button>
+    <button class="go amber" onclick="quickAlert('${alertSym}','${alertType}',${a.pv.R1},${a.pv.S1})">🔔 Pasang alert otomatis di R1 & S1</button>
+    <div class="note">💡 Risk:Reward = 1:1,5 di TP1 dan 1:2,5 di TP2. Kalau TP1 kena, geser SL ke entry (break-even).</div>
+  </div>`;
+  LAST[out]={name,a,isStock};
+  calcPos(out,a.entry,a.sl,isStock);
+}
+
+/* ================= TRADINGVIEW SCANNER (jalur utama, bebas blokir) ================= */
+const TVCOLS=['close','high','low','change','RSI','EMA20','EMA50','ATR','Recommend.All',
+  'Pivot.M.Classic.S2','Pivot.M.Classic.S1','Pivot.M.Classic.Middle','Pivot.M.Classic.R1','Pivot.M.Classic.R2'];
+async function tvScan(market,tickers){
+  const r=await fetchT('https://scanner.tradingview.com/'+market+'/scan',{
+    method:'POST',
+    body:JSON.stringify({symbols:{tickers:tickers,query:{types:[]}},columns:TVCOLS})
+  },10000);
+  if(!r.ok)throw new Error('TV scanner '+r.status);
+  const j=await r.json();
+  if(!j.data||!j.data.length)throw new Error('simbol tidak ditemukan');
+  const map={};
+  j.data.forEach(row=>{
+    const d=row.d;
+    map[row.s]={close:d[0],high:d[1],low:d[2],change:d[3],RSI:d[4],EMA20:d[5],EMA50:d[6],ATR:d[7],rec:d[8],
+      pS2:d[9],pS1:d[10],pP:d[11],pR1:d[12],pR2:d[13]};
+  });
+  return map;
+}
+
+/* ===== kolom lengkap saham: teknikal + fundamental + dividen ===== */
+const SCOLS=TVCOLS.concat(['market_cap_basic','price_earnings_ttm','dividends_yield',
+  'dividend_amount_recent','dividend_ex_date_recent','dividend_amount_upcoming','dividend_ex_date_upcoming',
+  'return_on_equity','debt_to_equity','Perf.Y','description']);
+async function tvIndo(body){
+  const r=await fetchT('https://scanner.tradingview.com/indonesia/scan',{
+    method:'POST',body:JSON.stringify(body)},12000);
+  if(!r.ok)throw new Error('TV '+r.status);
+  const j=await r.json();
+  return j.data||[];
+}
+function sParse(row){
+  const d=row.d;
+  return {sym:(row.s||'').replace('IDX:',''),
+    close:d[0],high:d[1],low:d[2],change:d[3],RSI:d[4],EMA20:d[5],EMA50:d[6],ATR:d[7],rec:d[8],
+    pS2:d[9],pS1:d[10],pP:d[11],pR1:d[12],pR2:d[13],
+    mcap:d[14],pe:d[15],dy:d[16],divAmtR:d[17],divExR:d[18],divAmtU:d[19],divExU:d[20],
+    roe:d[21],de:d[22],perfY:d[23],desc:d[24]};
+}
+function fmtDate(v){
+  if(v==null||v==='')return null;
+  let d;
+  if(typeof v==='number')d=new Date(v<1e11?v*1000:v);
+  else d=new Date(v);
+  if(isNaN(d.getTime()))return null;
+  return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+}
+function recLabel(r){
+  if(r==null)return ['—','fl'];
+  if(r>0.5)return ['BELI KUAT','up'];if(r>0.1)return ['Beli','up'];
+  if(r<-0.5)return ['JUAL KUAT','dn'];if(r<-0.1)return ['Jual','dn'];
+  return ['Netral','fl'];
+}
+function divCard(d){
+  const exU=fmtDate(d.divExU),exR=fmtDate(d.divExR);
+  const next=exU
+    ?'📅 <b>Ex-date berikutnya: '+exU+'</b>'+(d.divAmtU?' · '+fmtR(d.divAmtU)+'/lembar':'')+'.<br>Beli paling lambat <b>1 hari bursa SEBELUM ex-date</b> (= cum date) supaya kebagian dividen. Di hari ex-date harga biasanya gap turun sebesar dividennya — itu normal.'
+    :'Belum ada pengumuman jadwal dividen berikutnya untuk emiten ini. Jadwal biasanya keluar setelah RUPS (mayoritas emiten IDX bagi dividen di Q2, bank-bank besar Maret–April). Pantau pengumuman resmi di idx.co.id atau aplikasi sekuritas kamu.';
+  return `<div class="card">
+    <div class="sig-name">💰 Info Dividen ${esc(d.sym||'')}</div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="stat"><div class="k">Dividend yield</div><div class="v ${d.dy>4?'g':''}">${d.dy!=null?d.dy.toFixed(2)+'%':'—'}</div></div>
+      <div class="stat"><div class="k">P/E (TTM)</div><div class="v">${d.pe!=null?d.pe.toFixed(1)+'×':'—'}</div></div>
+      <div class="stat"><div class="k">Dividen terakhir</div><div class="v">${d.divAmtR?fmtR(d.divAmtR)+'/lbr':'—'}</div></div>
+      <div class="stat"><div class="k">Ex-date terakhir</div><div class="v" style="font-size:13px">${exR||'—'}</div></div>
+    </div>
+    <div class="note">${next}</div>
+  </div>`;
+}
+function pickRow(d,extra){
+  return `<div class="wl-row">
+    <div class="info" onclick="picks('${esc(d.sym)}')">
+      <div class="s">${esc(d.sym)} <small>· ${esc((d.desc||'').slice(0,26))}</small></div>
+      <div class="pr">${fmtR(d.close)} · ${extra}</div>
+    </div>
+    <div class="chg ${d.change>=0?'up':'dn'}">${d.change>=0?'+':''}${(d.change||0).toFixed(2)}%</div>
+  </div>`;
+}
+/* ===== TOP PICKS HARI INI: konsensus teknikal terkuat di saham likuid ===== */
+async function runTopPicks(){
+  $('s-out').innerHTML='<div class="loading">⏳ Screening seluruh saham IDX…</div>';
+  try{
+    const rows=await tvIndo({
+      filter:[
+        {left:'market_cap_basic',operation:'egreater',right:3000000000000},
+        {left:'volume',operation:'egreater',right:2000000},
+        {left:'close',operation:'egreater',right:100}
+      ],
+      markets:['indonesia'],symbols:{query:{types:[]},tickers:[]},
+      columns:SCOLS,sort:{sortBy:'Recommend.All',sortOrder:'desc'},range:[0,10]
+    });
+    if(!rows.length)throw new Error('hasil kosong');
+    $('s-out').innerHTML=`<div class="card">
+      <div class="sig-name">🏆 Top Picks Hari Ini</div>
+      <div class="src" style="margin:4px 0 6px">Saham likuid (kap. ≥Rp3T) dengan konsensus teknikal TradingView terkuat saat ini. Tap untuk analisa lengkap.</div>
+      ${rows.map(r=>{const d=sParse(r);const L=recLabel(d.rec);
+        return pickRow(d,'<span class="'+L[1]+'">'+L[0]+'</span> · RSI '+(d.RSI!=null?d.RSI.toFixed(0):'—')+(d.dy>3?' · 💰'+d.dy.toFixed(1)+'%':''));}).join('')}
+      <div class="note">⚠️ Ini hasil screening teknikal harian — cocok untuk ide trading jangka pendek, bukan rekomendasi beli. Sinyal teknikal bisa berbalik cepat; selalu cek analisa lengkap + tentukan SL dulu.</div>
+    </div>`;
+  }catch(e){
+    $('s-out').innerHTML='<div class="alert">❌ Screening gagal ('+esc(e.message)+'). Coba lagi beberapa detik.</div>';
+  }
+}
+/* ===== JANGKA PANJANG: skor fundamental blue chip ===== */
+function ltScore(d){
+  let s=0,why=[];
+  if(d.roe!=null){if(d.roe>15){s+=2;why.push('ROE '+d.roe.toFixed(0)+'% (sangat efisien)')}else if(d.roe>8){s++;why.push('ROE '+d.roe.toFixed(0)+'%')}}
+  if(d.pe!=null&&d.pe>0){if(d.pe<15){s+=2;why.push('P/E '+d.pe.toFixed(1)+'× (murah)')}else if(d.pe<22){s++;why.push('P/E '+d.pe.toFixed(1)+'×')}}
+  if(d.dy!=null){if(d.dy>4){s+=2;why.push('yield '+d.dy.toFixed(1)+'% (juara dividen)')}else if(d.dy>2){s++;why.push('yield '+d.dy.toFixed(1)+'%')}}
+  if(d.de!=null&&d.de<1.5)s++;
+  if(d.perfY!=null&&d.perfY>0){s++;why.push('1 thn +'+d.perfY.toFixed(0)+'%')}
+  if(d.mcap>50e12){s++;why.push('kap. raksasa')}
+  return {s,why};
+}
+async function runLongTerm(){
+  $('s-out').innerHTML='<div class="loading">⏳ Menilai fundamental blue chip IDX…</div>';
+  try{
+    const rows=await tvIndo({
+      filter:[{left:'market_cap_basic',operation:'egreater',right:10000000000000},
+              {left:'close',operation:'egreater',right:100}],
+      markets:['indonesia'],symbols:{query:{types:[]},tickers:[]},
+      columns:SCOLS,sort:{sortBy:'market_cap_basic',sortOrder:'desc'},range:[0,80]
+    });
+    if(!rows.length)throw new Error('hasil kosong');
+    const scored=rows.map(r=>{const d=sParse(r);d._lt=ltScore(d);return d})
+      .sort((a,b)=>b._lt.s-a._lt.s||b.mcap-a.mcap).slice(0,10);
+    $('s-out').innerHTML=`<div class="card">
+      <div class="sig-name">🏛️ Kandidat Jangka Panjang</div>
+      <div class="src" style="margin:4px 0 6px">80 emiten terbesar IDX (kap. ≥Rp10T) dinilai dari ROE, P/E, dividend yield, utang, dan kinerja 1 tahun. Tap untuk analisa + info dividen.</div>
+      ${scored.map(d=>pickRow(d,'skor '+d._lt.s+'/9 · '+(d._lt.why.slice(0,2).join(' · ')||'data fundamental terbatas'))).join('')}
+      <div class="note">⚠️ Ini screening kuantitatif dari data terkini, BUKAN rekomendasi investasi. Angka fundamental bisa berubah tiap laporan keuangan, dan skor tinggi tidak menjamin masa depan — tetap baca laporan keuangan & prospek bisnisnya sebelum invest jangka panjang.</div>
+    </div>`;
+  }catch(e){
+    $('s-out').innerHTML='<div class="alert">❌ Screening gagal ('+esc(e.message)+'). Coba lagi beberapa detik.</div>';
+  }
+}
+
+/* ================= CRYPTO ================= */
+async function srcCC(sym,tf){
+  let url;
+  if(tf==='1d')url=`https://min-api.cryptocompare.com/data/v2/histoday?fsym=${sym}&tsym=USDT&limit=140`;
+  else if(tf==='4h')url=`https://min-api.cryptocompare.com/data/v2/histohour?fsym=${sym}&tsym=USDT&limit=140&aggregate=4`;
+  else url=`https://min-api.cryptocompare.com/data/v2/histohour?fsym=${sym}&tsym=USDT&limit=140`;
+  const r=await fetchT(url);
+  const j=await r.json();
+  if(j.Response!=='Success'||!j.Data||!j.Data.Data)throw new Error(j.Message||'koin tidak ditemukan');
+  const d=j.Data.Data.filter(x=>x.close>0);
+  if(d.length<60)throw new Error('data kurang');
+  return {h:d.map(x=>x.high),l:d.map(x=>x.low),c:d.map(x=>x.close)};
+}
+async function srcBinance(base,sym,tf){
+  const r=await fetchT(`${base}/api/v3/klines?symbol=${sym}USDT&interval=${tf}&limit=140`);
+  if(!r.ok)throw new Error('pair tidak ada');
+  const k=await r.json();
+  if(!Array.isArray(k)||k.length<60)throw new Error('data kurang');
+  return {h:k.map(x=>+x[2]),l:k.map(x=>+x[3]),c:k.map(x=>+x[4])};
+}
+async function runCrypto(){
+  let sym=$('c-sym').value.trim().toUpperCase().replace(/USDT$|USD$|IDR$/,'');
+  if(!sym){alert('Ketik dulu nama koinnya, contoh: BTC');return}
+  const tf=$('c-tf').value;
+  $('c-go').disabled=true;
+  const name=sym+' / USDT — '+tf.toUpperCase();
+  // 1. CryptoCompare (riwayat candle penuh)
+  try{
+    $('c-out').innerHTML='<div class="loading">⏳ Sumber 1: CryptoCompare…</div>';
+    const d=await srcCC(sym,tf);
+    render('c-out',name,analyzeHist(d.h,d.l,d.c,0.15),x=>'$'+fmtC(x),false,'CryptoCompare',sym,'crypto');
+    $('c-go').disabled=false;return;
+  }catch(e){}
+  // 2. TradingView scanner (snapshot indikator)
+  try{
+    $('c-out').innerHTML='<div class="loading">⏳ Sumber 2: TradingView…</div>';
+    const m=await tvScan('crypto',['CRYPTO:'+sym+'USD','BINANCE:'+sym+'USDT']);
+    const d=m['CRYPTO:'+sym+'USD']||m['BINANCE:'+sym+'USDT'];
+    if(!d||d.close==null)throw new Error('kosong');
+    render('c-out',sym+' / USD — Harian',analyzeTV(d,0.15),x=>'$'+fmtC(x),false,'TradingView (timeframe harian)',sym,'crypto');
+    $('c-go').disabled=false;return;
+  }catch(e){}
+  // 3-4. Binance mirror & asli
+  for(const s of [{n:'Binance Vision',b:'https://data-api.binance.vision'},{n:'Binance',b:'https://api.binance.com'}]){
+    try{
+      $('c-out').innerHTML='<div class="loading">⏳ Sumber: '+s.n+'…</div>';
+      const d=await srcBinance(s.b,sym,tf);
+      render('c-out',name,analyzeHist(d.h,d.l,d.c,0.15),x=>'$'+fmtC(x),false,s.n,sym,'crypto');
+      $('c-go').disabled=false;return;
+    }catch(e){}
+  }
+  $('c-out').innerHTML='<div class="alert">❌ Semua sumber data gagal.<br>• Cek ejaan koin (contoh: BTC, SOL — tanpa USDT)<br>• Cek koneksi internet<br>• Coba ganti antara WiFi ↔ data seluler</div>';
+  $('c-go').disabled=false;
+}
+
+/* ================= SAHAM + IHSG ================= */
+let ihsgLoaded=false;
+async function loadIHSG(force){
+  if(ihsgLoaded&&!force)return;
+  try{
+    const m=await tvScan('indonesia',['IDX:COMPOSITE']);
+    const d=m['IDX:COMPOSITE'];
+    if(!d)return;
+    renderIHSG(d);
+    ihsgLoaded=true;
+  }catch(e){
+    $('ihsg-box').innerHTML='<div class="ihsg"><div><div class="nm">IHSG</div><div class="pv">—</div></div><div class="tr fl">data belum bisa diambil</div></div>';
+  }
+}
+function renderIHSG(d){
+  const up=d.change>=0.15,dn=d.change<=-0.15;
+  let trend='Sideways',cls='fl';
+  if(d.EMA20>d.EMA50&&d.rec>0.1){trend='Uptrend — pasar mendukung beli';cls='up'}
+  else if(d.EMA20<d.EMA50&&d.rec<-0.1){trend='Downtrend — hati-hati, kurangi posisi';cls='dn'}
+  else if(up){trend='Menguat hari ini';cls='up'}
+  else if(dn){trend='Melemah hari ini';cls='dn'}
+  $('ihsg-box').innerHTML=`<div class="ihsg">
+    <div><div class="nm">IHSG (Composite)</div><div class="pv">${d.close.toLocaleString('id-ID',{maximumFractionDigits:1})}</div></div>
+    <div class="tr ${cls}"><b>${d.change>=0?'+':''}${d.change.toFixed(2)}%</b><br>${trend}</div>
+  </div>`;
+}
+async function runSaham(){
+  const code=$('s-sym').value.trim().toUpperCase();
+  if(!code){alert('Ketik dulu kode sahamnya, contoh: PGAS');return}
+  $('s-go').disabled=true;
+  // 1. TradingView Indonesia (utama — sekalian ambil IHSG + dividen)
+  try{
+    $('s-out').innerHTML='<div class="loading">⏳ Sumber 1: TradingView…</div>';
+    const rows=await tvIndo({symbols:{tickers:['IDX:'+code,'IDX:COMPOSITE'],query:{types:[]}},columns:SCOLS});
+    const map={};rows.forEach(r=>{map[(r.s||'')]=sParse(r)});
+    if(map['IDX:COMPOSITE']){renderIHSG(map['IDX:COMPOSITE']);ihsgLoaded=true}
+    const d=map['IDX:'+code];
+    if(!d||d.close==null)throw new Error('kosong');
+    const a=analyzeTV(d,0.10);
+    if(a.dir==='SHORT'){
+      a.dir='WAIT';
+      a.reasons.push('Sinyal aslinya bearish — saham reguler IDX tidak bisa short, lebih baik tunggu/hindari dulu');
+      a.entry=a.pv.S1;a.sl=Math.max(a.pv.S2,a.entry*0.9);a.tp1=a.pv.P;a.tp2=a.pv.R1;
+    }
+    render('s-out',code+' — IDX',a,fmtR,true,'TradingView',code,'saham');
+    $('s-out').insertAdjacentHTML('beforeend',divCard(d));
+    $('s-go').disabled=false;return;
+  }catch(e){}
+  // 2. Yahoo via proxy
+  const y=`https://query1.finance.yahoo.com/v8/finance/chart/${code}.JK?interval=1d&range=6mo`;
+  const proxies=[
+    {n:'AllOrigins',u:'https://api.allorigins.win/raw?url='+encodeURIComponent(y)},
+    {n:'CorsProxy',u:'https://corsproxy.io/?url='+encodeURIComponent(y)},
+    {n:'CodeTabs',u:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(y)}
+  ];
+  for(const p of proxies){
+    try{
+      $('s-out').innerHTML='<div class="loading">⏳ Jalur cadangan: '+p.n+'…</div>';
+      const r=await fetchT(p.u,null,10000);
+      if(!r.ok)continue;
+      const j=await r.json();
+      const res=j.chart&&j.chart.result&&j.chart.result[0];
+      if(!res)continue;
+      const q=res.indicators.quote[0];
+      const h=[],l=[],c=[];
+      for(let i=0;i<q.close.length;i++){
+        if(q.close[i]!=null&&q.high[i]!=null&&q.low[i]!=null){h.push(q.high[i]);l.push(q.low[i]);c.push(q.close[i])}
+      }
+      if(c.length<60)continue;
+      const a=analyzeHist(h,l,c,0.10);
+      if(a.dir==='SHORT'){
+        a.dir='WAIT';
+        a.reasons.push('Sinyal aslinya bearish — saham reguler IDX tidak bisa short, lebih baik tunggu/hindari dulu');
+        a.entry=a.pv.S1;a.sl=Math.max(a.pv.S2,a.entry*0.9);a.tp1=a.pv.P;a.tp2=a.pv.R1;
+      }
+      render('s-out',code+' — IDX (Harian)',a,fmtR,true,'Yahoo via '+p.n,code,'saham');
+      $('s-go').disabled=false;return;
+    }catch(e){}
+  }
+  $('s-out').innerHTML='<div class="alert">❌ Data saham tidak bisa diambil otomatis. Pakai <b>input manual</b> — cukup 4 angka dari aplikasi sekuritas kamu.</div>';
+  $('s-manual').classList.remove('hide');
+  $('s-go').disabled=false;
+}
+
+function runManual(){
+  const last=+$('m-last').value,C=+$('m-close').value,H=+$('m-high').value,L=+$('m-low').value;
+  const tr=+$('m-trend').value;
+  if(!last||!C||!H||!L||H<L){alert('Lengkapi semua angka dengan benar (High harus ≥ Low)');return}
+  const pv=pivots(H,L,C);
+  const rng=H-L;
+  const chg=(last-C)/C*100;
+  let score=tr;
+  if(last>pv.P)score++;else score--;
+  if(chg>1)score++;else if(chg<-1)score--;
+  let dir=score>=2?'LONG':'WAIT';
+  const reasons=[
+    'Tren mingguan: '+(tr>0?'naik':tr<0?'turun':'sideways'),
+    'Harga '+(last>pv.P?'di atas':'di bawah')+' pivot '+fmtR(roundTick(pv.P)),
+    'Perubahan vs close kemarin: '+chg.toFixed(2)+'%'
+  ];
+  let entry,sl,tp1,tp2;
+  if(dir==='LONG'){entry=last;sl=Math.min(entry-rng,pv.S1);tp1=entry+1.5*(entry-sl);tp2=entry+2.5*(entry-sl)}
+  else{entry=pv.S1;sl=pv.S2;tp1=pv.P;tp2=pv.R1;reasons.push('Belum ada konfirmasi naik — rencana beli di support saja')}
+  const code=$('s-sym').value.trim().toUpperCase()||'SAHAM';
+  const a={last,pv,score,dir,conf:Math.min(90,55+Math.abs(score)*10),reasons,entry,sl,tp1,tp2,lo:last-1.5*rng,hi:last+1.5*rng,R:null,A:rng};
+  render('s-out',code,a,fmtR,true,'Input manual',code,'saham');
+}
+
+/* ================= MEME DEX SCANNER ================= */
+let MEMES=[];
+function gtParse(j){
+  return (j.data||[]).map(p=>{
+    const a=p.attributes||{};
+    const net=(p.id||'').split('_')[0];
+    const tid=(p.relationships&&p.relationships.base_token&&p.relationships.base_token.data&&p.relationships.base_token.data.id)||'';
+    const tx=(a.transactions&&a.transactions.h24)||{};
+    const tx5=(a.transactions&&a.transactions.m5)||{};
+    return {
+      name:a.name||'?', sym:(a.name||'?').split('/')[0].trim(), net,
+      addr:tid.indexOf('_')>-1?tid.slice(tid.indexOf('_')+1):tid,
+      price:+a.base_token_price_usd||0,
+      liq:+a.reserve_in_usd||0, fdv:+a.fdv_usd||0,
+      vol24:+((a.volume_usd&&a.volume_usd.h24)||0),
+      vol1:+((a.volume_usd&&a.volume_usd.h1)||0),
+      m5b:+tx5.buys||0, m5s:+tx5.sells||0,
+      h1:+((a.price_change_percentage&&a.price_change_percentage.h1)||0),
+      h6:+((a.price_change_percentage&&a.price_change_percentage.h6)||0),
+      h24:+((a.price_change_percentage&&a.price_change_percentage.h24)||0),
+      buys:+tx.buys||0, sells:+tx.sells||0,
+      buyers:+tx.buyers||0, sellers:+tx.sellers||0,
+      ageH:a.pool_created_at?(Date.now()-new Date(a.pool_created_at).getTime())/36e5:null
+    };
+  }).filter(t=>t.price>0);
+}
+function scoreMeme(t){
+  let s=50, flags=[];
+  if(t.liq<10000){s-=35;flags.push('🔴 Likuiditas <$10rb — sangat rawan rug pull / susah keluar')}
+  else if(t.liq<50000){s-=15;flags.push('🟠 Likuiditas tipis (<$50rb) — slippage besar')}
+  else if(t.liq>150000)s+=10;
+  const vr=t.liq?t.vol24/t.liq:0;
+  if(vr>2)s+=15; else if(vr>0.5)s+=5; else{s-=10;flags.push('🟠 Volume sepi dibanding likuiditas')}
+  const br=t.sells>0?t.buys/t.sells:(t.buys>0?2:1);
+  if(br>1.3)s+=10; else if(br<0.7){s-=10;flags.push('🟠 Tekanan jual lebih besar dari beli')}
+  if(t.h1>5)s+=8; if(t.h1<-10)s-=8;
+  if(t.h24>25)s+=7;
+  if(t.h24<-25){s-=12;flags.push('🔴 Sudah jatuh dalam di 24 jam terakhir')}
+  if(t.h24>300){s-=10;flags.push('🟠 Sudah pump ratusan persen — rawan jadi exit liquidity orang lain')}
+  if(t.ageH!=null){
+    if(t.ageH<24){s-=20;flags.push('🔴 Umur pool <24 jam — mayoritas token seumur ini berakhir rug')}
+    else if(t.ageH<168){s-=5;flags.push('🟡 Umur pool <7 hari — masih fase paling rawan')}
+    else if(t.ageH>720)s+=5;
+  }
+  if(t.fdv>0&&t.liq>0&&t.fdv/t.liq>200){s-=10;flags.push('🟠 FDV jomplang vs likuiditas (>200×) — gampang dibanting')}
+  s=Math.max(0,Math.min(100,Math.round(s)));
+  const v=s>=65?{t:'POTENSI DIPANTAU',c:'long'}:s>=40?{t:'PANTAU / HATI-HATI',c:'wait'}:{t:'HINDARI',c:'short'};
+  return {s,flags,verdict:v.t,cls:v.c};
+}
+/* saringan keras: pool baru yang jelas sampah dibuang sebelum dinilai */
+function gemFilter(t){
+  return t.price>0 && t.liq>=15000 && t.vol24>=10000 && (t.ageH==null||t.ageH<=168);
+}
+/* skor "gem" untuk token baru launching — fokus ke tanda kehidupan organik */
+function scoreGem(t){
+  let s=40, flags=[], plus=[];
+  if(t.liq>=100000){s+=20;plus.push('💧 Likuiditas kuat '+fmtUsd(t.liq))}
+  else if(t.liq>=50000){s+=12;plus.push('💧 Likuiditas lumayan '+fmtUsd(t.liq))}
+  else if(t.liq>=30000)s+=5;
+  else flags.push('🟠 Likuiditas masih tipis ('+fmtUsd(t.liq)+')');
+  const vr=t.liq?t.vol24/t.liq:0;
+  if(vr>3){s+=15;plus.push('🔥 Volume '+vr.toFixed(1)+'× likuiditas — perputaran sangat aktif')}
+  else if(vr>1)s+=8;
+  else flags.push('🟠 Volume belum ramai dibanding likuiditas');
+  const br=t.sells>0?t.buys/t.sells:(t.buys>0?2:1);
+  if(br>1.5){s+=12;plus.push('🟢 Tekanan beli dominan ('+t.buys+' buy vs '+t.sells+' sell)')}
+  else if(br>1.1)s+=6;
+  else if(br<0.8){s-=10;flags.push('🟠 Seller lebih agresif dari buyer')}
+  if(t.buyers>=300){s+=8;plus.push('👥 '+t.buyers+' pembeli unik 24 jam — minat organik')}
+  else if(t.buyers>0&&t.buyers<50){s-=8;flags.push('🟠 Pembeli unik cuma '+t.buyers+' — rawan dimainkan segelintir wallet')}
+  if(t.h6>5&&t.h6<150){s+=6;plus.push('📈 Momentum 6 jam sehat (+'+t.h6.toFixed(0)+'%)')}
+  if(t.h24>500){s-=15;flags.push('🔴 Sudah pump '+t.h24.toFixed(0)+'% — kamu bukan pembeli pertama, rawan jadi exit liquidity')}
+  if(t.h1<-15){s-=10;flags.push('🟠 Lagi dibanting di 1 jam terakhir ('+t.h1.toFixed(0)+'%)')}
+  if(t.ageH!=null){
+    if(t.ageH<3){s-=12;flags.push('🔴 Umur <3 jam — fase paling rawan rug instan')}
+    else if(t.ageH<=72){s+=8;plus.push('⏱ Umur '+fmtAge(t.ageH)+' — lewat fase dump awal tapi masih early')}
+  }
+  if(t.fdv>0&&t.liq>0&&t.fdv/t.liq>100){s-=10;flags.push('🟠 FDV jomplang vs likuiditas (>100×)')}
+  s=Math.max(0,Math.min(100,Math.round(s)));
+  const v=s>=70?{t:'🌱 GEM POTENSIAL',c:'long'}:s>=50?{t:'PANTAU / HATI-HATI',c:'wait'}:{t:'HINDARI',c:'short'};
+  return {s,flags,plus,verdict:v.t,cls:v.c};
+}
+/* ===== ALPHA SCAN: cari token yang lagi akselerasi SEBELUM ramai ===== */
+function alphaFilter(t){return t.price>0&&t.liq>=10000&&t.vol24>=5000}
+function scoreAlpha(t){
+  let s=35,flags=[],plus=[];
+  // akselerasi volume: laju 1 jam terakhir vs rata-rata harian
+  const accel=t.vol24>0?(t.vol1*24)/t.vol24:0;
+  if(accel>5){s+=25;plus.push('🚀 Volume 1 jam terakhir '+accel.toFixed(1)+'× laju harian — akselerasi kencang')}
+  else if(accel>2.5){s+=15;plus.push('📈 Volume mulai akselerasi ('+accel.toFixed(1)+'× laju harian)')}
+  else if(accel<0.5)flags.push('🟠 Momentum volume justru melambat');
+  // serbuan beli 5 menit terakhir
+  if(t.m5b>=8&&t.m5b>t.m5s*1.5){s+=15;plus.push('⚡ Serbuan beli 5 menit terakhir ('+t.m5b+' buy vs '+t.m5s+' sell)')}
+  else if(t.m5b>t.m5s&&t.m5b>=3)s+=6;
+  // pola akumulasi diam-diam (ciri khas smart money masuk)
+  const br=t.sells>0?t.buys/t.sells:(t.buys>0?2:1);
+  if(Math.abs(t.h24)<10&&br>1.3){s+=12;plus.push('🕵️ Akumulasi diam-diam: harga masih sideways tapi beli dominan')}
+  // masih kecil = ruang naik
+  if(t.liq>=15000&&t.liq<=150000){s+=8;plus.push('💎 Likuiditas '+fmtUsd(t.liq)+' — masih kecil, ruang naik besar (risiko juga)')}
+  else if(t.liq>500000)flags.push('🟡 Sudah besar — alpha-nya mungkin sudah lewat');
+  if(t.buyers>=100)s+=6;
+  // belum telat
+  if(t.h24>300){s-=18;flags.push('🔴 Sudah pump '+t.h24.toFixed(0)+'% — alpha sudah diambil orang lain')}
+  else if(t.h24<60&&t.h24>-10)s+=6;
+  if(t.h1<-12){s-=8;flags.push('🟠 Lagi koreksi tajam 1 jam terakhir')}
+  if(t.ageH!=null&&t.ageH<3){s-=10;flags.push('🔴 Umur <3 jam — rawan rug instan')}
+  if(t.fdv>0&&t.liq>0&&t.fdv/t.liq>150){s-=8;flags.push('🟠 FDV/likuiditas jomplang')}
+  s=Math.max(0,Math.min(100,Math.round(s)));
+  const v=s>=68?{t:'🎯 SINYAL ALPHA',c:'long'}:s>=48?{t:'PANTAU / HATI-HATI',c:'wait'}:{t:'LEWATI',c:'short'};
+  return {s,flags,plus,verdict:v.t,cls:v.c};
+}
+/* ===== SMART MONEY PROXY: baca jejak pemain besar dari pola transaksi ===== */
+function smartProxy(t){
+  const out=[];
+  const txTot=t.buys+t.sells;
+  if(txTot>0&&t.vol24>0){
+    const avg=t.vol24/txTot;
+    if(avg>1500)out.push('🐋 Rata-rata transaksi '+fmtUsd(avg)+' — ada pemain BESAR ikut main');
+    else if(avg>400)out.push('🦈 Rata-rata transaksi '+fmtUsd(avg)+' — campuran retail & pemain menengah');
+    else out.push('🐟 Rata-rata transaksi '+fmtUsd(avg)+' — dominan retail kecil');
+  }
+  const br=t.sells>0?t.buys/t.sells:(t.buys>0?2:1);
+  if(Math.abs(t.h24)<10&&br>1.3)out.push('🕵️ Pola AKUMULASI: harga sideways tapi beli dominan — ciri pemain sabar lagi nyicil');
+  else if(t.h24>50&&br<0.9)out.push('⚠️ Pola DISTRIBUSI: harga naik tapi seller dominan — rawan lagi dibuangin ke retail');
+  if(t.buyers>0&&t.sellers>0){
+    const ur=t.buyers/t.sellers;
+    if(ur>1.4)out.push('👥 Pembeli unik '+t.buyers+' vs penjual '+t.sellers+' — minat masuk melebar');
+    else if(ur<0.7)out.push('👥 Penjual unik lebih banyak ('+t.sellers+' vs '+t.buyers+') — banyak yang kabur');
+  }
+  if(!out.length)out.push('Data transaksi belum cukup untuk baca pola pemain besar.');
+  return out;
+}
+/* ===== HOLDER TRACKING on-chain (Solana, via RPC publik) ===== */
+async function rpcSol(method,params){
+  const r=await fetchT('https://api.mainnet-beta.solana.com',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})
+  },12000);
+  const j=await r.json();
+  if(j.error)throw new Error(j.error.message||'RPC error');
+  return j.result.value;
+}
+async function holderCheck(i){
+  const t=MEMES[i],box=$('hd'+i);
+  if(!t||!box)return;
+  if(t.net!=='solana'){
+    box.innerHTML='<div class="note">ℹ️ Cek holder on-chain gratis di aplikasi ini baru tersedia untuk <b>Solana</b>. Untuk '+esc(t.net)+', buka explorer chain-nya (etherscan/basescan/bscscan) → tab "Holders".</div>';
+    return;
+  }
+  box.innerHTML='<div class="loading" style="padding:10px">⏳ Mengambil data on-chain dari Solana…</div>';
+  try{
+    const [largest,supply]=await Promise.all([
+      rpcSol('getTokenLargestAccounts',[t.addr]),
+      rpcSol('getTokenSupply',[t.addr])
+    ]);
+    const tot=+supply.uiAmount;
+    if(!(tot>0)||!largest||!largest.length)throw new Error('data supply kosong');
+    const top=largest.slice(0,10).map(a=>+a.uiAmount||0);
+    const p1=top[0]/tot*100;
+    const p10=top.reduce((a,b)=>a+b,0)/tot*100;
+    let verdict,cls;
+    if(p10>50){verdict='🔴 SANGAT TERPUSAT — 10 wallet pegang '+p10.toFixed(0)+'% supply, gampang banget dibanting';cls='dn'}
+    else if(p10>30){verdict='🟠 Cukup terpusat — top 10 pegang '+p10.toFixed(0)+'%';cls='fl'}
+    else{verdict='🟢 Distribusi relatif sehat — top 10 cuma '+p10.toFixed(0)+'%';cls='up'}
+    const bars=top.slice(0,5).map((v,k)=>{
+      const pc=v/tot*100;
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><span style="font-family:var(--mono);font-size:11px;color:var(--muted);width:18px">#'+(k+1)+'</span><div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,pc*2)+'%;background:'+(pc>20?'var(--short)':pc>10?'var(--wait)':'var(--long)')+'"></div></div><span style="font-family:var(--mono);font-size:11px;width:48px;text-align:right">'+pc.toFixed(1)+'%</span></div>';
+    }).join('');
+    box.innerHTML='<div class="note"><b class="'+cls+'">'+verdict+'</b><br><br><b>Top 5 holder:</b>'+bars+
+      '<br>Wallet #1 pegang '+p1.toFixed(1)+'% supply.'+(p1>15?' ⚠️ Satu wallet sebesar ini bisa nge-nuke harga sendirian.':'')+
+      '<br><small>Catatan: holder #1 biasanya pool likuiditas (LP) — kalau #1 besar tapi sisanya kecil, itu justru normal. Cek detail di rugcheck.xyz untuk lihat LP-nya dikunci atau tidak.</small></div>';
+  }catch(e){
+    box.innerHTML='<div class="note">❌ RPC publik Solana lagi sibuk/membatasi ('+esc(e.message)+'). Tunggu sebentar lalu coba lagi, atau cek manual di solscan.io → tab Holders.</div>';
+  }
+}
+function memeCard(t,i){
+  const sc=t._sc;
+  const sl=t.price*0.8, tp1=t.price*1.4, tp2=t.price*2;
+  return `<div class="card">
+    <div class="sig-head"><div class="sig-name">${i+1}. ${esc(t.sym)} <small style="color:#5B6478">· ${esc(t.net)}</small></div><div class="sig-price">$${fmtTiny(t.price)}</div></div>
+    <span class="badge ${sc.cls}" style="font-size:13px">${sc.verdict} · skor ${sc.s}/100</span>
+    <div class="grid2">
+      <div class="stat"><div class="k">1 Jam</div><div class="v ${t.h1>=0?'g':'r'}">${t.h1>=0?'+':''}${t.h1.toFixed(1)}%</div></div>
+      <div class="stat"><div class="k">24 Jam</div><div class="v ${t.h24>=0?'g':'r'}">${t.h24>=0?'+':''}${t.h24.toFixed(1)}%</div></div>
+      <div class="stat"><div class="k">Likuiditas</div><div class="v">${fmtUsd(t.liq)}</div></div>
+      <div class="stat"><div class="k">Volume 24J</div><div class="v">${fmtUsd(t.vol24)}</div></div>
+      <div class="stat"><div class="k">Buy / Sell 24J</div><div class="v">${t.buys} / ${t.sells}</div></div>
+      <div class="stat"><div class="k">Umur pool</div><div class="v">${fmtAge(t.ageH)}</div></div>
+    </div>
+    ${sc.plus&&sc.plus.length?'<div class="note" style="color:#9FE8D2">'+sc.plus.join('<br>')+'</div>':''}
+    ${sc.flags.length?'<div class="note">'+sc.flags.join('<br>')+'</div>':'<div class="note">✅ Tidak ada bendera merah dari data harga — tapi rug/honeypot tetap tidak terdeteksi dari sini.</div>'}
+    <button class="go" onclick="$('md${i}').classList.toggle('hide');calcPos('m${i}',${t.price},${sl},false)">📋 Rencana Disiplin & Alert</button>
+    <div class="hide" id="md${i}">
+      <div class="grid2">
+        <div class="stat"><div class="k">Entry</div><div class="v y">$${fmtTiny(t.price)}</div></div>
+        <div class="stat"><div class="k">SL ketat (−20%)</div><div class="v r">$${fmtTiny(sl)}</div></div>
+        <div class="stat"><div class="k">TP1 (+40%)</div><div class="v g">$${fmtTiny(tp1)}</div></div>
+        <div class="stat"><div class="k">TP2 (+100%)</div><div class="v g">$${fmtTiny(tp2)}</div></div>
+      </div>
+      ${posBoxHTML('m'+i,t.price,sl,false)}
+      <div class="note">📐 Aturan main meme: SL −20% itu WAJIB dan tanpa nego (meme bisa −90% dalam hitungan menit). Jual 50% posisi di TP1, sisanya pakai trailing. Maksimal 1–2% dari total porto per token.</div>
+      <div class="note"><b>🕵️ Jejak smart money (proxy dari pola transaksi):</b><br>• ${smartProxy(t).join('<br>• ')}</div>
+      <button class="go" style="background:#2A3650;color:var(--text)" onclick="holderCheck(${i})">🐋 Cek Top Holder On-Chain</button>
+      <div id="hd${i}"></div>
+      <div class="note" style="word-break:break-all">📄 Kontrak: <span style="font-family:var(--mono);font-size:11px">${esc(t.addr)}</span><br><small>Sebelum beli, cek kontrak ini di rugcheck.xyz (Solana) atau honeypot.is (EVM)</small></div>
+      <button class="go" style="background:#2A3650;color:var(--text)" onclick="addWatchMeme(${i})">⭐ Simpan ke watchlist</button>
+      <button class="go amber" onclick="quickAlertMeme(${i})">🔔 Alert: breakout TP1 & breakdown SL</button>
+    </div>
+  </div>`;
+}
+function renderMemes(list,title,scorer,extra){
+  scorer=scorer||scoreMeme;
+  list.forEach(t=>t._sc=scorer(t));
+  list.sort((a,b)=>b._sc.s-a._sc.s);
+  MEMES=list.slice(0,12);
+  $('d-out').innerHTML='<div class="src" style="margin-bottom:10px">'+title+(extra?' · '+extra:'')+' — diurutkan dari skor terbaik</div>'
+    +MEMES.map((t,i)=>memeCard(t,i)).join('');
+}
+async function gtFetch(path){
+  const r=await fetchT('https://api.geckoterminal.com/api/v2/'+path,null,12000);
+  if(!r.ok)throw new Error('GeckoTerminal '+r.status);
+  return gtParse(await r.json());
+}
+async function runMeme(){
+  const net=$('d-net').value, mode=$('d-mode').value;
+  $('d-go').disabled=true;
+  const base=net?('networks/'+net):'networks';
+  try{
+    if(mode==='alpha'){
+      // gabungkan trending + pool baru, cari yang lagi akselerasi
+      let all=[],scanned=0;
+      $('d-out').innerHTML='<div class="loading">⏳ Alpha scan: trending…</div>';
+      try{const p1=await gtFetch(base+'/trending_pools?page=1');scanned+=p1.length;all=all.concat(p1)}catch(e){}
+      await new Promise(r=>setTimeout(r,400));
+      for(let pg=1;pg<=2;pg++){
+        $('d-out').innerHTML='<div class="loading">⏳ Alpha scan: pool baru '+pg+'/2…</div>';
+        try{const p=await gtFetch(base+'/new_pools?page='+pg);scanned+=p.length;all=all.concat(p)}catch(e){break}
+        await new Promise(r=>setTimeout(r,400));
+      }
+      if(!all.length)throw new Error('semua sumber kosong');
+      const seen={},uniq=[];
+      all.forEach(t=>{if(t.addr&&!seen[t.addr]){seen[t.addr]=1;uniq.push(t)}});
+      const pass=uniq.filter(alphaFilter);
+      if(!pass.length){
+        $('d-out').innerHTML='<div class="alert" style="background:rgba(245,181,68,.08);border-color:rgba(245,181,68,.35);color:#FFE2A8">🎯 Dipindai '+scanned+' pool — belum ada yang menunjukkan akselerasi layak saat ini. Alpha itu jarang; coba lagi 15–30 menit.</div>';
+        $('d-go').disabled=false;return;
+      }
+      renderMemes(pass,'🎯 Alpha scan'+(net?' di '+net:' semua chain'),scoreAlpha,
+        'kandidat '+pass.length+' dari '+scanned+' pool');
+    }else if(mode==='gems'){
+      // pindai 3 halaman pool baru, buang sampah, nilai pakai kriteria gem
+      let all=[],scanned=0;
+      for(let pg=1;pg<=3;pg++){
+        $('d-out').innerHTML='<div class="loading">⏳ Memindai pool baru… halaman '+pg+'/3</div>';
+        try{
+          const part=await gtFetch(base+'/new_pools?page='+pg);
+          scanned+=part.length;all=all.concat(part);
+        }catch(e){if(pg===1)throw e;break}
+        await new Promise(r=>setTimeout(r,400)); // jaga rate limit
+      }
+      // dedup per kontrak
+      const seen={},uniq=[];
+      all.forEach(t=>{if(t.addr&&!seen[t.addr]){seen[t.addr]=1;uniq.push(t)}});
+      const pass=uniq.filter(gemFilter);
+      if(!pass.length){
+        $('d-out').innerHTML='<div class="alert" style="background:rgba(245,181,68,.08);border-color:rgba(245,181,68,.35);color:#FFE2A8">🌱 Dipindai '+scanned+' pool baru — TIDAK ADA yang lolos saringan minimum saat ini (likuiditas ≥$15rb, volume ≥$10rb, umur ≤7 hari). Ini normal dan justru bagus: lebih baik kosong daripada dipaksakan. Coba lagi 15–30 menit lagi.</div>';
+        $('d-go').disabled=false;return;
+      }
+      renderMemes(pass,'🌱 Baru & berpotensi'+(net?' di '+net:' semua chain'),scoreGem,
+        'lolos saringan '+pass.length+' dari '+scanned+' pool');
+    }else{
+      $('d-out').innerHTML='<div class="loading">⏳ Memindai DEX via GeckoTerminal…</div>';
+      const list=await gtFetch(base+(mode==='new'?'/new_pools':'/trending_pools')+'?page=1');
+      if(!list.length)throw new Error('hasil kosong');
+      renderMemes(list,(mode==='new'?'🆕 Pool baru':'🔥 Trending')+(net?' di '+net:' semua chain'),scoreMeme);
+    }
+  }catch(e){
+    $('d-out').innerHTML='<div class="alert">❌ Scan gagal ('+esc(e.message)+'). Coba lagi beberapa detik (rate limit GeckoTerminal 30 panggilan/menit), atau ganti WiFi ↔ data seluler.</div>';
+  }
+  $('d-go').disabled=false;
+}
+async function checkToken(){
+  const q=$('d-q').value.trim();
+  if(!q){alert('Paste dulu alamat kontrak atau nama tokennya');return}
+  $('d-out').innerHTML='<div class="loading">⏳ Mencari token via DexScreener…</div>';
+  try{
+    const r=await fetchT('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(q),null,12000);
+    const j=await r.json();
+    if(!j.pairs||!j.pairs.length)throw new Error('token tidak ditemukan');
+    j.pairs.sort((a,b)=>((b.liquidity&&b.liquidity.usd)||0)-((a.liquidity&&a.liquidity.usd)||0));
+    const p=j.pairs[0];
+    const t={
+      name:p.baseToken.symbol+' / '+p.quoteToken.symbol, sym:p.baseToken.symbol,
+      net:p.chainId, addr:p.baseToken.address,
+      price:+p.priceUsd||0,
+      liq:(p.liquidity&&+p.liquidity.usd)||0, fdv:+p.fdv||0,
+      vol24:(p.volume&&+p.volume.h24)||0,
+      vol1:(p.volume&&+p.volume.h1)||0,
+      m5b:(p.txns&&p.txns.m5&&+p.txns.m5.buys)||0,
+      m5s:(p.txns&&p.txns.m5&&+p.txns.m5.sells)||0,
+      h1:(p.priceChange&&+p.priceChange.h1)||0,
+      h24:(p.priceChange&&+p.priceChange.h24)||0,
+      buys:(p.txns&&p.txns.h24&&+p.txns.h24.buys)||0,
+      sells:(p.txns&&p.txns.h24&&+p.txns.h24.sells)||0,
+      ageH:p.pairCreatedAt?(Date.now()-p.pairCreatedAt)/36e5:null
+    };
+    if(!t.price)throw new Error('harga tidak tersedia');
+    t._sc=scoreMeme(t);
+    MEMES=[t];
+    $('d-out').innerHTML='<div class="src" style="margin-bottom:10px">Pair terlikuid: '+esc(t.name)+' di '+esc(t.net)+'</div>'+memeCard(t,0);
+  }catch(e){
+    $('d-out').innerHTML='<div class="alert">❌ Gagal: '+esc(e.message)+'. Coba paste alamat kontrak lengkapnya.</div>';
+  }
+}
+function quickAlertMeme(i){
+  const t=MEMES[i];
+  if(!t)return;
+  alerts.push({sym:t.sym,type:'meme',addr:t.addr,up:+(t.price*1.4).toPrecision(6),dn:+(t.price*0.8).toPrecision(6)});
+  askNotif();saveAlerts();
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+/* ================= WATCHLIST ================= */
+let watch=store.get('st_watch')||[];
+let QUOTES={},lastRef=null;
+function saveWatch(){store.set('st_watch',watch);drawWatch()}
+function addWatch(sym,type,addr,net){
+  sym=(sym||'').toUpperCase();
+  if(!sym)return;
+  if(watch.some(w=>w.sym===sym&&w.type===type)){toast('⭐ '+sym+' sudah ada di watchlist');return}
+  watch.push({sym,type,addr:addr||null,net:net||null});
+  saveWatch();toast('⭐ '+sym+' masuk watchlist');
+}
+function addWatchManual(){
+  const sym=$('wl-sym').value.trim().toUpperCase().replace(/USDT$|USD$/,'');
+  if(!sym){alert('Isi simbolnya dulu, contoh: BTC atau PGAS');return}
+  addWatch(sym,$('wl-type').value);
+  $('wl-sym').value='';refreshWatch();
+}
+function addWatchMeme(i){
+  const t=MEMES[i];if(!t)return;
+  addWatch(t.sym,'meme',t.addr,t.net);
+}
+function delWatch(i){
+  const w=watch[i];watch.splice(i,1);saveWatch();
+  toast('Hapus '+w.sym+' dari watchlist');
+}
+function goAnalyze(i){
+  const w=watch[i];if(!w)return;
+  if(w.type==='crypto'){swTab('crypto');$('c-sym').value=w.sym;runCrypto()}
+  else if(w.type==='saham'){swTab('saham');$('s-sym').value=w.sym;runSaham()}
+  else{swTab('meme');$('d-q').value=w.addr||w.sym;checkToken()}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function wlPrice(w,q){
+  if(!q)return '—';
+  return w.type==='saham'?fmtR(q.p):'$'+fmtTiny(q.p);
+}
+function drawWatch(){
+  // IHSG selalu nempel di atas
+  const ih=QUOTES['ihsg'];
+  $('wl-ihsg').innerHTML=ih?`<div class="wl-row pin">
+    <div class="info"><div class="s">IHSG <small>indeks</small></div>
+    <div class="pr">${ih.p.toLocaleString('id-ID',{maximumFractionDigits:1})}</div></div>
+    <div class="chg ${ih.c>=0?'up':'dn'}">${ih.c>=0?'+':''}${ih.c.toFixed(2)}%</div>
+  </div>`:'';
+  if(!watch.length){
+    $('wl-out').innerHTML='<div class="note" style="text-align:center;padding:14px 0">Watchlist masih kosong. Tambah dari tombol ⭐ di hasil analisa, atau lewat form di bawah.</div>';
+    $('wl-sum').textContent='';
+    $('wl-status').textContent='—';
+    return;
+  }
+  let up=0,dn=0;
+  $('wl-out').innerHTML=watch.map((w,i)=>{
+    const q=QUOTES[w.type+':'+w.sym];
+    if(q){if(q.c>=0)up++;else dn++}
+    return `<div class="wl-row">
+      <div class="info" onclick="goAnalyze(${i})">
+        <div class="s">${esc(w.sym)} <small>· ${w.type}</small></div>
+        <div class="pr">${wlPrice(w,q)}</div>
+      </div>
+      <div class="chg ${!q?'fl':q.c>=0?'up':'dn'}">${q?(q.c>=0?'+':'')+q.c.toFixed(2)+'%':'…'}</div>
+      <button class="al-del" onclick="delWatch(${i})">✕</button>
+    </div>`;
+  }).join('');
+  $('wl-sum').innerHTML=lastRef?('🟢 '+up+' naik · 🔴 '+dn+' turun (24 jam)'):'Tap refresh untuk ambil harga';
+  $('wl-status').textContent=lastRef?('update '+lastRef.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})):'—';
+}
+async function refreshWatch(){
+  $('wl-go').disabled=true;
+  $('wl-status').textContent='⏳ mengambil…';
+  const cr=watch.filter(w=>w.type==='crypto'),
+        st=watch.filter(w=>w.type==='saham'),
+        mm=watch.filter(w=>w.type==='meme'&&w.addr);
+  const Q={};
+  const jobs=[];
+  // crypto: satu panggilan CryptoCompare untuk semua koin
+  if(cr.length)jobs.push((async()=>{
+    try{
+      const r=await fetchT('https://min-api.cryptocompare.com/data/pricemultifull?fsyms='+cr.map(w=>w.sym).join(',')+'&tsyms=USDT',null,10000);
+      const j=await r.json();
+      cr.forEach(w=>{
+        const d=j.RAW&&j.RAW[w.sym]&&j.RAW[w.sym].USDT;
+        if(d)Q['crypto:'+w.sym]={p:d.PRICE,c:d.CHANGEPCT24HOUR};
+      });
+    }catch(e){}
+  })());
+  // saham + IHSG: satu panggilan TradingView untuk semuanya
+  jobs.push((async()=>{
+    try{
+      const tickers=['IDX:COMPOSITE'].concat(st.map(w=>'IDX:'+w.sym));
+      const m=await tvScan('indonesia',tickers);
+      if(m['IDX:COMPOSITE'])Q['ihsg']={p:m['IDX:COMPOSITE'].close,c:m['IDX:COMPOSITE'].change||0};
+      st.forEach(w=>{
+        const d=m['IDX:'+w.sym];
+        if(d&&d.close!=null)Q['saham:'+w.sym]={p:d.close,c:d.change||0};
+      });
+    }catch(e){}
+  })());
+  // meme: satu panggilan DexScreener untuk semua kontrak
+  if(mm.length)jobs.push((async()=>{
+    try{
+      const r=await fetchT('https://api.dexscreener.com/latest/dex/tokens/'+mm.map(w=>w.addr).join(','),null,12000);
+      const j=await r.json();
+      (j.pairs||[]).forEach(p=>{
+        const w=mm.find(x=>x.addr&&p.baseToken&&x.addr.toLowerCase()===p.baseToken.address.toLowerCase());
+        if(!w)return;
+        const k='meme:'+w.sym,liq=(p.liquidity&&+p.liquidity.usd)||0;
+        if(!Q[k]||liq>(Q[k].liq||0))Q[k]={p:+p.priceUsd||0,c:(p.priceChange&&+p.priceChange.h24)||0,liq};
+      });
+    }catch(e){}
+  })());
+  await Promise.all(jobs);
+  QUOTES=Q;lastRef=new Date();
+  drawWatch();
+  $('wl-go').disabled=false;
+}
+
+/* ================= KALKULATOR POSISI ================= */
+function posBoxHTML(uid,entry,sl,isStock){
+  const cfg=store.get('st_cfg')||{idr:10000000,usd:500,pct:1};
+  const cap=isStock?cfg.idr:cfg.usd;
+  return `<label class="mt">🧮 Ukuran posisi (manajemen risiko)</label>
+  <div class="row">
+    <div><label>Modal (${isStock?'Rp':'USD'})</label><input id="pm-${uid}" type="number" inputmode="decimal" value="${cap}" oninput="calcPos('${uid}',${entry},${sl},${isStock})"></div>
+    <div><label>Risiko per trade %</label><input id="pp-${uid}" type="number" inputmode="decimal" step="0.5" value="${cfg.pct}" oninput="calcPos('${uid}',${entry},${sl},${isStock})"></div>
+  </div>
+  <div class="stat mt"><div class="k">Beli maksimal</div><div class="v y" id="pv-${uid}">—</div><div id="pn-${uid}" style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5"></div></div>`;
+}
+function calcPos(uid,entry,sl,isStock){
+  const pm=$('pm-'+uid),pp=$('pp-'+uid);
+  if(!pm||!pp)return;
+  const m=parseFloat(pm.value)||0,p=parseFloat(pp.value)||0;
+  const cfg=store.get('st_cfg')||{idr:10000000,usd:500,pct:1};
+  if(m>0){if(isStock)cfg.idr=m;else cfg.usd=m}
+  if(p>0)cfg.pct=p;
+  store.set('st_cfg',cfg);
+  const V=$('pv-'+uid),N=$('pn-'+uid);
+  const per=entry-sl;
+  if(!(m>0&&p>0&&per>0)){V.textContent='—';N.textContent='Isi modal & persen risiko dulu';return}
+  const risk=m*p/100;
+  let units=risk/per,capped='';
+  if(units*entry>m){ // tanpa leverage: posisi maksimal = modal
+    units=m/entry;
+    capped=' ⚠️ Dibatasi setara modal (tanpa leverage), risiko riil '+(units*per/m*100).toFixed(2)+'% modal.';
+  }
+  if(isStock){
+    const lots=Math.floor(units/100);
+    if(lots<1){
+      V.textContent='< 1 lot';
+      N.textContent='Jarak SL '+fmtR(per)+'/lembar terlalu lebar untuk risiko '+p+'% dari modal ini. Pilihan: kecilkan jarak SL, naikkan modal, atau lewati trade ini.';
+      return;
+    }
+    V.textContent=lots+' lot (≈'+fmtR(lots*100*entry)+')';
+    N.textContent='Kalau kena SL, rugi ≈'+fmtR(lots*100*per)+' = '+(lots*100*per/m*100).toFixed(2)+'% modal.'+capped;
+  }else{
+    V.textContent='$'+fmtC(units*entry);
+    N.textContent='Kalau kena SL, rugi ≈$'+fmtC(units*per)+' = '+(units*per/m*100).toFixed(2)+'% modal.'+capped;
+  }
+}
+
+/* ================= JURNAL TRADING ================= */
+let journal=store.get('st_journal')||[];
+function saveJournal(){store.set('st_journal',journal);drawJournal()}
+function fillJournal(sym,entry){
+  $('j-sym').value=sym;$('j-in').value=+entry.toPrecision(6);$('j-out').value='';
+  toast('📓 Form jurnal terisi — lengkapi exit nanti');
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+function plOf(t){
+  const raw=(t.out-t.inp)/t.inp*100;
+  return t.dir==='S'?-raw:raw;
+}
+function addJournal(){
+  const sym=$('j-sym').value.trim().toUpperCase();
+  const inp=parseFloat($('j-in').value),out=parseFloat($('j-out').value);
+  const size=parseFloat($('j-size').value)||0;
+  if(!sym||!(inp>0)||!(out>0)){alert('Minimal isi: simbol, harga entry, dan harga exit');return}
+  journal.unshift({sym,dir:$('j-dir').value,inp,out,size,note:$('j-note').value.trim(),
+    date:new Date().toISOString().slice(0,10)});
+  $('j-sym').value='';$('j-in').value='';$('j-out').value='';$('j-size').value='';$('j-note').value='';
+  saveJournal();toast('💾 Trade '+sym+' tercatat');
+}
+function delJournal(i){journal.splice(i,1);saveJournal()}
+function drawJournal(){
+  if(!journal.length){
+    $('j-stats').innerHTML='';
+    $('j-list').innerHTML='<div class="note" style="text-align:center;padding:10px 0">Belum ada trade tercatat.</div>';
+    return;
+  }
+  const pls=journal.map(plOf);
+  const wins=pls.filter(x=>x>0),losses=pls.filter(x=>x<=0);
+  const wr=wins.length/pls.length*100;
+  const avgW=wins.length?wins.reduce((a,b)=>a+b,0)/wins.length:0;
+  const avgL=losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:0;
+  const sumW=wins.reduce((a,b)=>a+b,0),sumL=Math.abs(losses.reduce((a,b)=>a+b,0));
+  const pf=sumL>0?(sumW/sumL):(sumW>0?Infinity:0);
+  const totNom=journal.reduce((a,t)=>a+(t.size?t.size*plOf(t)/100:0),0);
+  $('j-stats').innerHTML=`<div class="grid2" style="margin-bottom:12px">
+    <div class="stat"><div class="k">Total trade</div><div class="v">${journal.length}</div></div>
+    <div class="stat"><div class="k">Win rate</div><div class="v ${wr>=50?'g':'r'}">${wr.toFixed(0)}%</div></div>
+    <div class="stat"><div class="k">Rata² profit</div><div class="v g">+${avgW.toFixed(1)}%</div></div>
+    <div class="stat"><div class="k">Rata² loss</div><div class="v r">${avgL.toFixed(1)}%</div></div>
+    <div class="stat"><div class="k">Profit factor</div><div class="v ${pf>=1.5?'g':pf>=1?'y':'r'}">${pf===Infinity?'∞':pf.toFixed(2)}</div></div>
+    <div class="stat"><div class="k">Total P/L (nominal)</div><div class="v ${totNom>=0?'g':'r'}">${totNom>=0?'+':''}${totNom.toLocaleString('id-ID',{maximumFractionDigits:0})}</div></div>
+  </div>`;
+  $('j-list').innerHTML=journal.map((t,i)=>{
+    const pl=plOf(t);
+    return `<div class="al-item">
+      <div><div class="s">${esc(t.sym)} <small style="color:#5B6478">${t.dir==='L'?'Long':'Short'} · ${t.date}</small></div>
+      <div class="lv">${t.inp} → ${t.out}${t.note?' · '+esc(t.note):''}</div></div>
+      <div style="text-align:right">
+        <span class="${pl>=0?'up':'dn'}" style="font-family:var(--mono);font-weight:700">${pl>=0?'+':''}${pl.toFixed(1)}%</span>
+        <button class="al-del" onclick="delJournal(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function exportJournal(){
+  if(!journal.length){alert('Jurnal masih kosong');return}
+  let csv='tanggal,simbol,arah,entry,exit,pl_persen,nilai_posisi,catatan\n';
+  journal.forEach(t=>{
+    csv+=[t.date,t.sym,t.dir==='L'?'Long':'Short',t.inp,t.out,plOf(t).toFixed(2),t.size||'','"'+(t.note||'').replace(/"/g,'""')+'"'].join(',')+'\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
+  a.download='jurnal-trading.csv';a.click();
+  toast('⬇️ CSV terunduh — bisa dibuka di Excel');
+}
+
+/* ================= SHARE & BACKUP ================= */
+const LAST={};
+function buildShareText(L){
+  const a=L.a;
+  const f=L.isStock?(x=>fmtR(roundTick(x))):(x=>'$'+fmtTiny(x));
+  const fp=L.isStock?fmtR:(x=>'$'+fmtTiny(x));
+  const sig=a.dir==='LONG'?'▲ LONG / BELI':a.dir==='SHORT'?'▼ SHORT / JUAL':'⏸ TUNGGU / SIDEWAYS';
+  return '📊 *SINYAL TRADING — '+L.name+'*\n'
+    +'Sinyal: *'+sig+'* (keyakinan '+a.conf+'%)\n'
+    +'Harga sekarang: '+fp(a.last)+'\n\n'
+    +'🎯 Entry: '+f(a.entry)+'\n'
+    +'🛑 Stop Loss: '+f(a.sl)+'\n'
+    +'✅ TP1: '+f(a.tp1)+' · TP2: '+f(a.tp2)+'\n\n'
+    +'📐 R2 '+f(a.pv.R2)+' | R1 '+f(a.pv.R1)+'\n'
+    +'    Pivot '+f(a.pv.P)+'\n'
+    +'    S1 '+f(a.pv.S1)+' | S2 '+f(a.pv.S2)+'\n\n'
+    +'_'+new Date().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+    +' · analisa teknikal otomatis, bukan saran finansial_';
+}
+function shareAnalysis(out){
+  const L=LAST[out];
+  if(!L){toast('Analisa dulu sebelum share');return}
+  const t=buildShareText(L);
+  if(navigator.share){
+    navigator.share({text:t}).catch(()=>{});
+  }else{
+    window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+  }
+}
+const BK_KEYS=['st_alerts','st_watch','st_journal','st_cfg'];
+function updateBkStatus(){
+  const el=$('bk-status');if(!el)return;
+  el.textContent='📦 Data saat ini: '+journal.length+' trade di jurnal · '+watch.length+' watchlist · '+alerts.length+' alert aktif';
+}
+function exportBackup(){
+  const data={};
+  BK_KEYS.forEach(k=>{const v=store.get(k);if(v!=null)data[k]=v});
+  const payload={app:'SinyalTrading',ver:11,exported:new Date().toISOString(),data};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,1)],{type:'application/json'}));
+  a.download='sinyaltrading-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('⬆️ Backup terunduh — simpan di Google Drive/WA');
+}
+function importBackup(inp){
+  const file=inp.files&&inp.files[0];
+  if(!file)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const p=JSON.parse(rd.result);
+      if(!p||p.app!=='SinyalTrading'||!p.data)throw new Error('bukan file backup SinyalTrading');
+      const d=p.data;
+      const nJ=(d.st_journal||[]).length,nW=(d.st_watch||[]).length,nA=(d.st_alerts||[]).length;
+      if(!confirm('Import backup tanggal '+(p.exported||'?').slice(0,10)+'?\n('+nJ+' trade, '+nW+' watchlist, '+nA+' alert)\n\nData di HP ini akan DITIMPA.'))return;
+      BK_KEYS.forEach(k=>{if(d[k]!=null)store.set(k,d[k])});
+      alerts=store.get('st_alerts')||[];
+      watch=store.get('st_watch')||[];
+      journal=store.get('st_journal')||[];
+      drawAlerts();drawWatch();drawJournal();updateBkStatus();
+      toast('✅ Backup berhasil di-restore');
+    }catch(e){alert('❌ Import gagal: '+e.message)}
+    inp.value='';
+  };
+  rd.readAsText(file);
+}
+
+/* ================= PRICE ALERT ENGINE ================= */
+let alerts=store.get('st_alerts')||[];
+function saveAlerts(){store.set('st_alerts',alerts);drawAlerts()}
+function askNotif(){
+  if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
+}
+function addAlert(){
+  const type=$('al-type').value;
+  let sym=$('al-sym').value.trim().toUpperCase().replace(/USDT$|USD$/,'');
+  const up=parseFloat($('al-up').value)||null;
+  const dn=parseFloat($('al-dn').value)||null;
+  if(!sym){alert('Isi simbolnya dulu (contoh: BTC atau PGAS)');return}
+  if(!up&&!dn){alert('Isi minimal satu level: breakout (atas) atau breakdown (bawah)');return}
+  alerts.push({sym,type,up,dn});
+  $('al-sym').value='';$('al-up').value='';$('al-dn').value='';
+  askNotif();saveAlerts();
+}
+function quickAlert(sym,type,r1,s1){
+  if(type==='saham'){r1=roundTick(r1);s1=roundTick(s1)}
+  alerts.push({sym,type,up:+r1.toPrecision(6),dn:+s1.toPrecision(6)});
+  askNotif();saveAlerts();
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+function delAlert(i){alerts.splice(i,1);saveAlerts()}
+function fmtLv(a,v){return a.type==='saham'?fmtR(v):'$'+fmtTiny(v)}
+function drawAlerts(){
+  $('al-list').innerHTML=alerts.map((a,i)=>`
+    <div class="al-item">
+      <div><div class="s">${a.sym} <small style="color:#5B6478">(${a.type})</small></div>
+      <div class="lv">${a.up?'▲ breakout ≥ '+fmtLv(a,a.up):''}${a.up&&a.dn?' · ':''}${a.dn?'▼ breakdown ≤ '+fmtLv(a,a.dn):''}</div></div>
+      <button class="al-del" onclick="delAlert(${i})">✕</button>
+    </div>`).join('');
+  $('al-status').textContent=alerts.length
+    ?'Memantau '+alerts.length+' alert — harga dicek tiap 60 detik. PENTING: halaman ini harus tetap terbuka di browser (boleh sambil layar mati kalau Chrome tidak ditidurkan sistem).'
+    :'Belum ada alert aktif. Tips: setelah analisa, tap tombol "Pasang alert otomatis di R1 & S1".';
+}
+function beep(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.frequency.value=880;g.gain.value=.25;o.start();
+    setTimeout(()=>{o.frequency.value=660},250);
+    setTimeout(()=>{o.stop();ctx.close()},700);
+  }catch(e){}
+}
+function fire(a,kind,price){
+  const msg=a.sym+' '+(kind==='up'?'BREAKOUT ▲ tembus '+fmtLv(a,a.up):'BREAKDOWN ▼ jebol '+fmtLv(a,a.dn))+' — harga skrg '+fmtLv(a,price);
+  const el=document.createElement('div');
+  el.className='al-fire';el.textContent='🔔 '+msg;
+  $('al-fired').prepend(el);
+  beep();
+  if(navigator.vibrate)navigator.vibrate([300,150,300,150,600]);
+  if('Notification'in window&&Notification.permission==='granted')new Notification('SinyalTrading 🔔',{body:msg});
+  if(kind==='up')a.up=null;else a.dn=null; // sekali bunyi, level itu nonaktif
+  alerts=alerts.filter(x=>x.up||x.dn);
+  saveAlerts();
+}
+async function priceOf(a){
+  if(a.type==='meme'){
+    try{
+      const r=await fetchT('https://api.dexscreener.com/latest/dex/tokens/'+a.addr,null,8000);
+      const j=await r.json();
+      if(j.pairs&&j.pairs.length){
+        j.pairs.sort((x,y)=>((y.liquidity&&y.liquidity.usd)||0)-((x.liquidity&&x.liquidity.usd)||0));
+        return +j.pairs[0].priceUsd||null;
+      }
+    }catch(e){}
+    return null;
+  }
+  if(a.type==='crypto'){
+    try{
+      const r=await fetchT('https://min-api.cryptocompare.com/data/price?fsym='+a.sym+'&tsyms=USDT',null,8000);
+      const j=await r.json();
+      if(j.USDT)return j.USDT;
+    }catch(e){}
+    try{
+      const m=await tvScan('crypto',['CRYPTO:'+a.sym+'USD']);
+      return m['CRYPTO:'+a.sym+'USD']&&m['CRYPTO:'+a.sym+'USD'].close;
+    }catch(e){return null}
+  }else{
+    try{
+      const m=await tvScan('indonesia',['IDX:'+a.sym]);
+      return m['IDX:'+a.sym]&&m['IDX:'+a.sym].close;
+    }catch(e){return null}
+  }
+}
+let checking=false;
+async function checkAlerts(){
+  if(checking||!alerts.length)return;
+  checking=true;
+  for(const a of [...alerts]){
+    const p=await priceOf(a);
+    if(p==null)continue;
+    if(a.up&&p>=a.up)fire(a,'up',p);
+    else if(a.dn&&p<=a.dn)fire(a,'dn',p);
+  }
+  checking=false;
+}
+setInterval(checkAlerts,60000);
+setInterval(()=>{ // auto-refresh watchlist tiap 60 dtk selama tabnya kebuka
+  if(!document.hidden&&watch.length&&$('p-watch').classList.contains('show'))refreshWatch();
+},60000);
+drawAlerts();
+drawJournal();
+drawWatch();
+updateBkStatus();
+setInterval(updateBkStatus,5000); // status backup ikut data terbaru
+if(watch.length)swTab('watch');else loadIHSG();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+</script>
+</body>
+</html>
