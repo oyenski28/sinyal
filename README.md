@@ -1,0 +1,2 @@
+# sinyal
+aplikasi sinyal trading
