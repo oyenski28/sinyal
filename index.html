@@ -6,10 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0B0E14">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Sinyal Trading v11 Final — Saham IDX & Crypto + Alert</title>
+<title>Sinyal Trading v13 — Saham IDX & Crypto + Alert</title>
 <style>
 :root{
   --bg:#0B0E14; --surface:#131825; --surface2:#0F1420; --line:#1F2736;
@@ -92,6 +89,10 @@ button.go.amber{background:var(--wait);color:#332200}
 .al-fire{background:rgba(245,181,68,.12);border:1px solid var(--wait);color:var(--wait);border-radius:12px;padding:12px;font-size:14px;font-weight:600;margin-top:10px;animation:bl 1s infinite}
 @keyframes bl{50%{opacity:.55}}
 .al-status{font-size:11px;color:#5B6478;margin-top:10px;line-height:1.5}
+.entry-note{font-size:12.5px;line-height:1.55;border-radius:12px;padding:11px 13px;margin-bottom:10px;font-weight:500}
+.entry-note.ready{background:rgba(45,212,167,.12);border:1px solid rgba(45,212,167,.4);color:#7FE9CE}
+.entry-note.near{background:rgba(245,181,68,.10);border:1px solid rgba(245,181,68,.35);color:#F5C97A}
+.entry-note.wait{background:rgba(255,92,114,.08);border:1px solid rgba(255,92,114,.30);color:#FFB3BE}
 
 /* watchlist */
 .wl-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:8px}
@@ -116,7 +117,7 @@ h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
 <body>
 <div class="wrap">
 <header>
-  <h1>Sinyal<span>Trading</span> <small style="font-size:12px;color:#5B6478">v11 Final</small></h1>
+  <h1>Sinyal<span>Trading</span> <small style="font-size:12px;color:#5B6478">v13</small></h1>
   <p>Saham IDX & crypto — sinyal, S/R, IHSG, dan price alert</p>
 </header>
 
@@ -169,6 +170,7 @@ h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
       <div><button class="go" style="margin-top:0" onclick="runTopPicks()">🏆 Top Picks Hari Ini</button></div>
       <div><button class="go" style="margin-top:0;background:#2A3650;color:var(--text)" onclick="runLongTerm()">🏛️ Jangka Panjang</button></div>
     </div>
+    <button class="go" style="background:#2A3650;color:var(--text)" onclick="showIPO()">📅 Kalender & Saran IPO Terbaru</button>
     <button class="go" id="s-go" onclick="runSaham()">Analisa Sekarang</button>
     <button class="linkbtn" onclick="toggleManual()">Semua jalur data gagal? Input manual di sini</button>
   </div>
@@ -430,7 +432,7 @@ function analyzeHist(h,l,c,cap){
   else reasons.push('RSI '+R.toFixed(0)+' — netral');
   if(mom>1.5){score++;reasons.push('Momentum 5 bar positif ('+mom.toFixed(1)+'%)')}
   else if(mom<-1.5){score--;reasons.push('Momentum 5 bar negatif ('+mom.toFixed(1)+'%)')}
-  return buildPlan(last,R,A,pv,score,reasons,cap);
+  return buildPlan(last,R,A,pv,score,reasons,cap,E20);
 }
 
 /* analisa dari snapshot TradingView (indikator sudah dihitung server) */
@@ -470,34 +472,116 @@ function analyzeTV(d,cap){
     else reasons.push('RSI '+R.toFixed(0)+' — netral');
   }
   if(d.change!=null)reasons.push('Perubahan hari ini: '+d.change.toFixed(2)+'%');
-  return buildPlan(last,R,A,pv,score,reasons,cap);
+  return buildPlan(last,R,A,pv,score,reasons,cap,d.EMA20);
 }
 
-function buildPlan(last,R,A,pv,score,reasons,cap){
+function buildPlan(last,R,A,pv,score,reasons,cap,E20){
   cap=cap||0.15; // jarak SL maksimum dari entry (10% saham, 15% crypto)
   let dir=score>=2?'LONG':(score<=-2?'SHORT':'WAIT');
   const conf=Math.min(95,55+Math.abs(score)*8);
-  let entry,sl,tp1,tp2;
+  let entry,sl,tp1,tp2,entryNote='',entryStatus='';
   if(dir==='SHORT'){
-    entry=last;
-    sl=Math.max(entry+1.5*A,pv.R1);
-    if(sl-entry>entry*cap)sl=entry*(1+cap);          // SL kejauhan → batasi
+    // SHORT: idealnya jual saat harga mantul NAIK ke resistance/EMA20 dulu (bukan kejar turun)
+    const cand=[pv.R1, E20&&E20>last?E20:null, last+0.4*A].filter(x=>x&&x>last&&x<last*(1+cap));
+    entry=cand.length?Math.min(...cand):last; // entry di area pantulan terdekat di atas
+    if(entry<last)entry=last;
+    sl=Math.max(entry+1.5*A,pv.R1*1.01);
+    if(sl-entry>entry*cap)sl=entry*(1+cap);
     tp1=entry-1.5*(sl-entry);tp2=entry-2.5*(sl-entry);
     tp1=Math.max(tp1,entry*0.05);tp2=Math.max(tp2,entry*0.05);
+    entryNote='Tunggu harga mantul NAIK ke '+'~area ini dulu sebelum jual/short — jangan kejar harga yang sedang jatuh.';
   }else{
-    if(dir==='LONG'){entry=last;sl=Math.min(entry-1.5*A,pv.S1)}
-    else{entry=pv.S1;sl=pv.S2}                        // WAIT: rencana beli di support
-    if(entry-sl>entry*cap)sl=entry*(1-cap);          // SL kejauhan → batasi
-    if(sl<=0||sl>=entry)sl=entry*(1-cap);            // SL minus/terbalik → perbaiki
+    // LONG & WAIT: entry di area DISKON (pullback), bukan harga sekarang
+    // kandidat zona beli = EMA20, Support1, Pivot — ambil yang di bawah/dekat harga & paling masuk akal
+    const zones=[];
+    if(E20&&E20<last*1.01)zones.push(E20);
+    if(pv.S1<last*1.01)zones.push(pv.S1);
+    if(pv.P<last*1.01)zones.push(pv.P);
+    zones.push(last-0.6*A); // pullback ringan berbasis volatilitas
+    // entry = zona tertinggi yang masih di bawah harga sekarang (diskon paling dekat / realistis)
+    const below=zones.filter(z=>z>0&&z<=last);
+    entry=below.length?Math.max(...below):last*0.985;
+    // batasi entry tidak lebih jauh dari cap*1.5 di bawah harga (biar realistis)
+    if(last-entry>last*cap*1.5)entry=last*(1-cap*1.5);
+    sl=Math.min(entry-1.2*A,pv.S1*0.99);
+    if(entry-sl>entry*cap)sl=entry*(1-cap);
+    if(sl<=0||sl>=entry)sl=entry*(1-cap);
     const risk=entry-sl;
-    if(dir==='LONG'){tp1=entry+1.5*risk;tp2=entry+2.5*risk}
-    else{tp1=Math.max(pv.P,entry+1.5*risk);tp2=Math.max(pv.R1,entry+2.5*risk)}
+    tp1=entry+1.5*risk;tp2=entry+2.5*risk;
+    if(dir==='WAIT'){tp1=Math.max(pv.P,tp1);tp2=Math.max(pv.R1,tp2)}
+    // status: harga sekarang udah masuk zona entry atau masih kemahalan?
+    const gap=(last-entry)/last*100;
+    if(last<=entry*1.005){entryStatus='ready';entryNote='✅ Harga sekarang SUDAH di area entry — boleh masuk bertahap (cicil), jangan all-in sekaligus.'}
+    else if(gap<2){entryStatus='near';entryNote='🟡 Harga sedikit di atas area entry ('+gap.toFixed(1)+'% lebih tinggi). Sabar dikit, tunggu turun ke '+(isFinite(entry)?'':'')+'area entry.'}
+    else{entryStatus='wait';entryNote='⏳ Harga sekarang masih '+gap.toFixed(1)+'% di atas area entry. JANGAN beli sekarang — pasang alert di area entry, beli pas harga turun ke situ. Ini yang bikin entry lebih aman & jarang kena cutloss.'}
   }
   const lo=Math.max(last-1.8*A,last*0.6), hi=last+1.8*A;
-  return {last,R:(R==null?null:R),A,pv,score,dir,conf,reasons,entry,sl,tp1,tp2,lo,hi};
+  return {last,R:(R==null?null:R),A,pv,score,dir,conf,reasons,entry,sl,tp1,tp2,lo,hi,entryNote,entryStatus};
 }
 
 /* ================= RENDER ================= */
+/* ===== rencana LONG & SHORT eksplisit utk crypto (dua arah) ===== */
+function dualPlan(a,cap){
+  cap=cap||0.15;
+  const last=a.last, A=a.A, pv=a.pv;
+  // LONG: entry di area diskon (support/pivot/pullback), SL di bawah support
+  const lz=[pv.S1,pv.P,last-0.6*A].filter(z=>z>0&&z<=last);
+  let lEntry=lz.length?Math.max(...lz):last*0.99;
+  if(last-lEntry>last*cap*1.5)lEntry=last*(1-cap*1.5);
+  let lSL=Math.min(lEntry-1.2*A,pv.S2);
+  if(lEntry-lSL>lEntry*cap)lSL=lEntry*(1-cap);
+  if(lSL<=0||lSL>=lEntry)lSL=lEntry*(1-cap);
+  const lRisk=lEntry-lSL;
+  const lTP1=lEntry+1.5*lRisk, lTP2=lEntry+2.5*lRisk;
+  // SHORT: entry di area mahal (resistance/pivot/pantulan naik), SL di atas resistance
+  const sz=[pv.R1,pv.P,last+0.6*A].filter(z=>z>=last);
+  let sEntry=sz.length?Math.min(...sz):last*1.01;
+  if(sEntry-last>last*cap*1.5)sEntry=last*(1+cap*1.5);
+  let sSL=Math.max(sEntry+1.2*A,pv.R2);
+  if(sSL-sEntry>sEntry*cap)sSL=sEntry*(1+cap);
+  const sRisk=sSL-sEntry;
+  const sTP1=Math.max(sEntry-1.5*sRisk,last*0.05), sTP2=Math.max(sEntry-2.5*sRisk,last*0.05);
+  return {
+    long:{entry:lEntry,sl:lSL,tp1:lTP1,tp2:lTP2},
+    short:{entry:sEntry,sl:sSL,tp1:sTP1,tp2:sTP2},
+    fav:a.dir // arah yang lebih didukung sinyal
+  };
+}
+function dualHTML(a,fmt,sym){
+  const d=dualPlan(a,0.15);
+  const favL=a.dir==='LONG', favS=a.dir==='SHORT';
+  const tag=f=>f?' <span style="font-size:10px;background:rgba(45,212,167,.2);color:var(--long);padding:2px 7px;border-radius:6px;font-weight:700">← sinyal condong ke sini</span>':'';
+  const tagS=f=>f?' <span style="font-size:10px;background:rgba(255,92,114,.18);color:var(--short);padding:2px 7px;border-radius:6px;font-weight:700">← sinyal condong ke sini</span>':'';
+  return `<div class="card" style="border-color:#2A3650">
+    <div class="sig-name" style="font-size:15px;margin-bottom:4px">⚖️ Dua Arah — pilih sesuai gerak harga</div>
+    <div class="src" style="margin-bottom:10px">Crypto bisa long & short. Di bawah ini kedua skenario, lengkap entry-SL-TP. Eksekusi yang sesuai konfirmasi harga.</div>
+
+    <div style="border:1px solid rgba(45,212,167,.35);border-radius:14px;padding:11px;margin-bottom:10px">
+      <div style="color:var(--long);font-weight:700;font-size:14px;margin-bottom:8px">▲ Skenario LONG / BELI${tag(favL)}</div>
+      <div class="grid2">
+        <div class="stat"><div class="k">Entry (diskon)</div><div class="v y">${fmt(d.long.entry)}</div></div>
+        <div class="stat"><div class="k">Stop Loss</div><div class="v r">${fmt(d.long.sl)}</div></div>
+        <div class="stat"><div class="k">TP1</div><div class="v g">${fmt(d.long.tp1)}</div></div>
+        <div class="stat"><div class="k">TP2</div><div class="v g">${fmt(d.long.tp2)}</div></div>
+      </div>
+      <div class="note" style="margin-top:8px">Masuk saat harga turun ke area entry & mulai mantul naik. Batal kalau tembus SL.</div>
+      <button class="go" style="margin-top:8px;background:rgba(45,212,167,.15);color:var(--long);box-shadow:none;border:1px solid rgba(45,212,167,.4)" onclick="quickAlert('${sym}','crypto',${d.short.entry},${d.long.entry})">🔔 Alert di entry LONG ${fmt(d.long.entry)}</button>
+    </div>
+
+    <div style="border:1px solid rgba(255,92,114,.3);border-radius:14px;padding:11px">
+      <div style="color:var(--short);font-weight:700;font-size:14px;margin-bottom:8px">▼ Skenario SHORT / JUAL${tagS(favS)}</div>
+      <div class="grid2">
+        <div class="stat"><div class="k">Entry (area mahal)</div><div class="v y">${fmt(d.short.entry)}</div></div>
+        <div class="stat"><div class="k">Stop Loss</div><div class="v r">${fmt(d.short.sl)}</div></div>
+        <div class="stat"><div class="k">TP1</div><div class="v g">${fmt(d.short.tp1)}</div></div>
+        <div class="stat"><div class="k">TP2</div><div class="v g">${fmt(d.short.tp2)}</div></div>
+      </div>
+      <div class="note" style="margin-top:8px">Masuk saat harga naik ke area entry & mulai ditolak turun. Batal kalau tembus SL. Short = pakai posisi futures/margin, risiko lebih besar.</div>
+    </div>
+    <div class="note">⚠️ Jangan buka long & short barengan tanpa rencana (hedging butuh strategi khusus). Pilih SATU arah sesuai konfirmasi: tunggu harga sampai ke salah satu area entry dulu, baru eksekusi.</div>
+  </div>`;
+}
+
 function render(out,name,a,fmt,isStock,src,alertSym,alertType){
   const f=isStock?(x=>fmtR(roundTick(x))):fmt;
   const badge=a.dir==='LONG'?'<span class="badge long">▲ LONG / BELI</span>'
@@ -519,8 +603,9 @@ function render(out,name,a,fmt,isStock,src,alertSym,alertType){
       <div class="rung sup"><div class="lbl">Support 2</div><div class="val">${f(a.pv.S2)}</div></div>
     </div>
     <label>${planLbl}</label>
+    ${a.entryNote?'<div class="entry-note '+(a.entryStatus||'')+'">'+a.entryNote+'</div>':''}
     <div class="grid2">
-      <div class="stat"><div class="k">Entry</div><div class="v y">${f(a.entry)}</div></div>
+      <div class="stat"><div class="k">Entry ${a.dir!=='WAIT'?'(area diskon)':''}</div><div class="v y">${f(a.entry)}</div></div>
       <div class="stat"><div class="k">Stop Loss</div><div class="v r">${f(a.sl)}</div></div>
       <div class="stat"><div class="k">Target 1 (TP1)</div><div class="v g">${f(a.tp1)}</div></div>
       <div class="stat"><div class="k">Target 2 (TP2)</div><div class="v g">${f(a.tp2)}</div></div>
@@ -539,9 +624,13 @@ function render(out,name,a,fmt,isStock,src,alertSym,alertType){
     <button class="go" style="background:#2A3650;color:var(--text)" onclick="addWatch('${alertSym}','${alertType}')">⭐ Simpan ke watchlist</button>
     <button class="go" style="background:#2A3650;color:var(--text)" onclick="fillJournal('${alertSym}',${a.entry})">📓 Catat ke jurnal</button>
     <button class="go" style="background:#2A3650;color:var(--text)" onclick="shareAnalysis('${out}')">📤 Share ke WhatsApp</button>
-    <button class="go amber" onclick="quickAlert('${alertSym}','${alertType}',${a.pv.R1},${a.pv.S1})">🔔 Pasang alert otomatis di R1 & S1</button>
+    <button class="go amber" onclick="quickAlert('${alertSym}','${alertType}',${a.pv.R1},${a.entry})">🔔 Alert di area entry (${f(a.entry)}) & breakout</button>
     <div class="note">💡 Risk:Reward = 1:1,5 di TP1 dan 1:2,5 di TP2. Kalau TP1 kena, geser SL ke entry (break-even).</div>
   </div>`;
+  // crypto: tambahkan kartu rencana dua arah (long & short)
+  if(!isStock){
+    $(out).insertAdjacentHTML('beforeend',dualHTML(a,fmt,alertSym));
+  }
   LAST[out]={name,a,isStock};
   calcPos(out,a.entry,a.sl,isStock);
 }
@@ -625,6 +714,58 @@ function pickRow(d,extra){
   </div>`;
 }
 /* ===== TOP PICKS HARI INI: konsensus teknikal terkuat di saham likuid ===== */
+/* ===== KALENDER & SARAN IPO ===== */
+async function showIPO(){
+  $('s-out').innerHTML='<div class="loading">⏳ Mengambil kalender IPO…</div>';
+  let liveRows='';
+  // coba tarik IPO terbaru via TradingView scanner Indonesia (kolom IPO date)
+  try{
+    const r=await fetchT('https://scanner.tradingview.com/indonesia/scan',{
+      method:'POST',
+      body:JSON.stringify({
+        filter:[{left:'is_primary',operation:'equal',right:true}],
+        columns:['name','description','listed_date','close','change','market_cap_basic'],
+        sort:{sortBy:'listed_date',sortOrder:'desc'},
+        range:[0,12]
+      })
+    },10000);
+    if(r.ok){
+      const j=await r.json();
+      const now=Date.now(), rows=(j.data||[]).map(x=>{
+        const d=x.d, ts=d[2]?(d[2]<1e11?d[2]*1000:d[2]):0;
+        return {sym:(x.s||'').replace('IDX:',''),name:d[1]||'',ts,close:d[3],change:d[4]||0,mcap:d[5]};
+      }).filter(x=>x.ts>0 && (now-x.ts)<200*864e5) // listing ≤ ~6 bulan terakhir
+        .sort((a,b)=>b.ts-a.ts).slice(0,8);
+      if(rows.length){
+        liveRows='<div class="src" style="margin:4px 0 8px">🆕 Saham yang baru listing di BEI (≤6 bulan terakhir) — tap untuk analisa:</div>'
+        +rows.map(x=>{
+          const dd=new Date(x.ts).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+          return `<div class="wl-row"><div class="info" onclick="picks('${esc(x.sym)}')">
+            <div class="s">${esc(x.sym)} <small>· listing ${dd}</small></div>
+            <div class="pr">${esc((x.name||'').slice(0,30))} · ${fmtR(x.close)}</div></div>
+            <div class="chg ${x.change>=0?'up':'dn'}">${x.change>=0?'+':''}${x.change.toFixed(2)}%</div></div>`;
+        }).join('');
+      }
+    }
+  }catch(e){}
+  if(!liveRows)liveRows='<div class="src" style="margin-bottom:8px">Data saham baru listing tidak bisa diambil otomatis saat ini — pakai sumber resmi di bawah.</div>';
+
+  $('s-out').innerHTML=`<div class="card">
+    <div class="sig-name">📅 IPO & Saham Baru Listing</div>
+    ${liveRows}
+    <label class="mt">Sumber resmi jadwal IPO (buka di browser)</label>
+    <a class="go" style="display:block;text-align:center;text-decoration:none;line-height:1.3" href="https://e-ipo.co.id/id/ipo/index" target="_blank" rel="noopener">🏛️ e-IPO.co.id — platform resmi IPO BEI<br><small style="font-weight:600;opacity:.85">daftar & pesan saham IPO langsung di sini</small></a>
+    <a class="go soft" style="display:block;text-align:center;text-decoration:none;color:var(--text)" href="https://www.idx.co.id/id/perusahaan-tercatat/aktivitas-pencatatan/" target="_blank" rel="noopener">📋 IDX — aktivitas pencatatan resmi</a>
+    <a class="go soft" style="display:block;text-align:center;text-decoration:none;color:var(--text)" href="https://id.tradingview.com/ipo-calendar/" target="_blank" rel="noopener">🗓️ TradingView — kalender IPO global</a>
+    <div class="note"><b>💡 Tips ikut IPO buat kamu:</b><br>
+    • Daftar IPO lewat <b>e-IPO</b> (gratis) atau aplikasi sekuritas yang terhubung (Ajaib, Stockbit, dll.) — pastikan RDN ada dananya<br>
+    • Tahapannya: <b>Book Building</b> (harga belum fix) → <b>Offering</b> (masa pemesanan) → <b>Allotment</b> (penjatahan) → <b>Listing</b> (mulai diperdagangkan)<br>
+    • Pesan saat status <b>"Offering"</b>, paling lambat sebelum masa penawaran tutup<br>
+    • Karena penjatahan, kamu bisa dapat lebih sedikit dari yang dipesan — itu normal</div>
+    <div class="note">⚠️ Saham IPO sangat fluktuatif di hari-hari awal dan sering bergerak karena sentimen, bukan fundamental. Banyak yang ARA di hari pertama lalu turun. Riset prospektusnya dulu, jangan FOMO, dan pakai uang dingin.</div>
+  </div>`;
+}
+
 async function runTopPicks(){
   $('s-out').innerHTML='<div class="loading">⏳ Screening seluruh saham IDX…</div>';
   try{
@@ -1572,7 +1713,6 @@ drawWatch();
 updateBkStatus();
 setInterval(updateBkStatus,5000); // status backup ikut data terbaru
 if(watch.length)swTab('watch');else loadIHSG();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
 </body>
 </html>
