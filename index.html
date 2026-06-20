@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0B0E14">
-<title>Sinyal Trading v13 — Saham IDX & Crypto + Alert</title>
+<title>Sinyal Trading v14 — Saham IDX & Crypto + Alert</title>
 <style>
 :root{
   --bg:#0B0E14; --surface:#131825; --surface2:#0F1420; --line:#1F2736;
@@ -112,12 +112,41 @@ button.go.amber{background:var(--wait);color:#332200}
 .hide{display:none}
 .linkbtn{background:none;border:none;color:var(--wait);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:10px;font-family:var(--sans)}
 h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
+
+/* ===== Tab Cek: Gate · Sinyal · Risk ===== */
+.tabs{gap:6px}.tabs .tab{padding:10px 5px;font-size:12.5px}
+.gk-verdict{display:flex;align-items:center;gap:12px}
+.gk-score{font-family:var(--mono);font-weight:700;font-size:30px;line-height:1}
+.gk-score small{font-size:13px;color:var(--muted);font-weight:400}
+.gk-meter{height:8px;border-radius:5px;background:var(--surface2);border:1px solid var(--line);overflow:hidden;margin-top:8px}
+.gk-fill{height:100%;width:0;border-radius:5px;transition:width .4s,background .3s}
+.gk-grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px;display:flex;align-items:center;gap:8px}
+.gk-grp.dgr{color:var(--short)}.gk-grp .ln{flex:1;height:1px;background:var(--line)}
+.gk-item{display:flex;gap:10px;align-items:flex-start;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+.gk-item.crit{border-left:3px solid var(--short)}
+.gk-item.au{border-color:rgba(124,108,255,.55)}
+.gk-main{flex:1;min-width:0}
+.gk-q{font-size:13.5px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.gk-h{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}.gk-h b{color:#9FB0D0}
+.gk-w{font-family:var(--mono);font-size:9px;color:#5B6478}
+.gk-ab{font-family:var(--mono);font-size:8px;color:#A99CFF;border:1px solid rgba(124,108,255,.5);border-radius:5px;padding:1px 5px;text-transform:uppercase}
+.gk-av{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.gk-tri{display:flex;gap:5px;flex-shrink:0}
+.gk-tri button{font-family:var(--mono);font-size:12px;font-weight:600;width:36px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;padding:0}
+.gk-tri button.on[data-v=pass]{background:rgba(45,212,167,.16);border-color:var(--long);color:var(--long)}
+.gk-tri button.on[data-v=fail]{background:rgba(255,92,114,.16);border-color:var(--short);color:var(--short)}
+.gk-tri button.on[data-v=unk]{background:var(--surface2);border-color:var(--muted);color:var(--text)}
+.gk-pill{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:7px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.gk-pill.open{color:var(--long);border-color:var(--long)}.gk-pill.blk{color:var(--short);border-color:var(--short)}
+.gk-rng{-webkit-appearance:auto;appearance:auto;accent-color:var(--long);padding:8px 0;background:transparent;border:none}
+.gk-dec{font-family:var(--sans);font-weight:800;font-size:19px;text-align:center;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);letter-spacing:.01em}
+.gk-why{font-size:12px;color:#AAB4C8;line-height:1.5;margin-top:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>Sinyal<span>Trading</span> <small style="font-size:12px;color:#5B6478">v13</small></h1>
+  <h1>Sinyal<span>Trading</span> <small style="font-size:12px;color:#5B6478">v14</small></h1>
   <p>Saham IDX & crypto — sinyal, S/R, IHSG, dan price alert</p>
 </header>
 
@@ -126,6 +155,7 @@ h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
   <div class="tab" data-t="saham" onclick="swTab('saham')">📈 IDX</div>
   <div class="tab" data-t="meme" onclick="swTab('meme')">🚀 Meme</div>
   <div class="tab" data-t="watch" onclick="swTab('watch')">⭐ List</div>
+  <div class="tab" data-t="cek" onclick="swTab('cek')">🛡️ Cek</div>
 </div>
 
 <!-- ============ CRYPTO ============ -->
@@ -233,6 +263,70 @@ h2.sec{font-size:15px;margin:18px 0 10px;color:var(--text)}
 </div>
 
 <!-- ============ WATCHLIST ============ -->
+<!-- ============ CEK: GATE · SINYAL · RISK ============ -->
+<div class="panel" id="p-cek">
+  <div class="alert" style="background:rgba(124,108,255,.08);border-color:rgba(124,108,255,.35);color:#CFC6F5">🛡️ <b>Vetting 1 token sebelum entry.</b> Tempel CA (Solana) → Scan auto-isi flow & gate. Smart money tetap manual via GMGN. Gate gagal = SKIP, sekuat apapun sinyalnya.</div>
+
+  <div class="card">
+    <label>Contract address (Solana)</label>
+    <input id="gk-ca" placeholder="Tempel CA… (atau dari tombol Cek di tab Meme)" autocomplete="off" spellcheck="false">
+    <button class="go" id="gk-scan" disabled>🔍 Scan otomatis</button>
+    <div class="src" id="gk-status" style="margin-top:8px"></div>
+    <div class="grid2" id="gk-strip" style="margin-top:10px;display:none"></div>
+    <div class="chips" id="gk-links"></div>
+  </div>
+
+  <div class="card">
+    <div class="gk-dec" id="gk-decision">Tempel CA &amp; scan dulu</div>
+    <div class="conf" id="gk-decsub" style="margin-top:7px">Gate harus lolos sebelum vonis beli muncul.</div>
+    <div class="gk-verdict" style="margin-top:12px">
+      <span class="gk-pill" id="gk-gate">GATE</span>
+      <div style="flex:1;min-width:0">
+        <div id="gk-vlabel" style="font-family:var(--mono);font-weight:700;font-size:13.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Belum dinilai</div>
+        <div class="gk-meter"><div class="gk-fill" id="gk-fill"></div></div>
+      </div>
+      <div class="gk-score" id="gk-score">—<small>/100</small></div>
+    </div>
+    <div id="gk-reasons"></div>
+  </div>
+
+  <div class="card">
+    <div class="gk-grp dgr">01 · Gate Rug<span class="ln"></span></div>
+    <div id="gk-gate-list"></div>
+    <div class="gk-grp" style="margin-top:16px">02 · Sinyal Meme<span class="ln"></span></div>
+    <div id="gk-sig-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="gk-grp">03 · Entry &amp; Sizing<span class="ln"></span></div>
+    <label>Modal khusus meme (Rp) <span style="float:right;font-family:var(--mono);color:var(--long)" id="gk-bkL">Rp10.000.000</span></label>
+    <input type="number" id="gk-bk" value="10000000" min="0" step="500000">
+    <div class="row mt">
+      <div><label>Risk/trade <span style="float:right;font-family:var(--mono);color:var(--long)" id="gk-riskL">3%</span></label>
+        <input type="range" class="gk-rng" id="gk-risk" value="3" min="1" max="10" step="0.5"></div>
+      <div><label>Stop loss <span style="float:right;font-family:var(--mono);color:var(--long)" id="gk-stopL">30%</span></label>
+        <input type="range" class="gk-rng" id="gk-stop" value="30" min="10" max="60" step="5"></div>
+    </div>
+    <label class="mt">Maks alokasi 1 koin <span style="float:right;font-family:var(--mono);color:var(--long)" id="gk-capL">20%</span></label>
+    <input type="range" class="gk-rng" id="gk-cap" value="20" min="5" max="50" step="5">
+    <div class="grid2 mt">
+      <div class="stat"><div class="k">Konviksi</div><div class="v" id="gk-conv" style="color:var(--muted)">—</div></div>
+      <div class="stat"><div class="k">Maks rugi/trade</div><div class="v" id="gk-eff">—</div></div>
+    </div>
+    <div class="stat mt"><div class="k">Ukuran posisi disarankan</div><div class="v" id="gk-pos" style="font-size:20px;color:var(--long)">—</div></div>
+    <div class="note" id="gk-capw" style="display:none;color:var(--wait)">⚠️ Kena batas alokasi 1 koin — posisi dipotong ke cap.</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><button class="go" style="margin-top:0;background:#2A3650;color:var(--text)" id="gk-save">⭐ Watchlist</button></div>
+      <div><button class="go amber" style="margin-top:0" id="gk-alert">🔔 Alert TP1/SL</button></div>
+    </div>
+    <button class="go" style="background:#23303F;color:var(--muted)" id="gk-reset">↺ Reset cek</button>
+    <div class="note">📐 <b>Aturan main:</b> entry cuma kalau Gate terbuka + sinyal min. "OK". Modal meme dipisah dari saham &amp; dana keluarga. 3 stop beruntun = stop hari itu. Profit dicicil di 2×, sisain runner. Auto-scan = heuristik, selalu verifikasi. <b>Bukan saran finansial.</b></div>
+  </div>
+</div>
+
 <div class="panel" id="p-watch">
   <div class="card">
     <div class="sig-head">
@@ -326,6 +420,7 @@ function swTab(t){
   $('p-saham').classList.toggle('show',t==='saham');
   $('p-meme').classList.toggle('show',t==='meme');
   $('p-watch').classList.toggle('show',t==='watch');
+  $('p-cek').classList.toggle('show',t==='cek');
   if(t==='saham')loadIHSG();
   if(t==='watch'&&watch.length&&(!lastRef||Date.now()-lastRef>60000))refreshWatch();
 }
@@ -1194,6 +1289,7 @@ function memeCard(t,i){
       <div class="note" style="word-break:break-all">📄 Kontrak: <span style="font-family:var(--mono);font-size:11px">${esc(t.addr)}</span><br><small>Sebelum beli, cek kontrak ini di rugcheck.xyz (Solana) atau honeypot.is (EVM)</small></div>
       <button class="go" style="background:#2A3650;color:var(--text)" onclick="addWatchMeme(${i})">⭐ Simpan ke watchlist</button>
       <button class="go amber" onclick="quickAlertMeme(${i})">🔔 Alert: breakout TP1 & breakdown SL</button>
+      <button class="go" style="background:#3A2F5E;color:#CFC6F5" onclick="gkLoad('${esc(t.addr)}','${esc(t.sym)}','${esc(t.net)}',${t.price})">🛡️ Cek Gate · Sinyal lengkap</button>
     </div>
   </div>`;
 }
@@ -1707,6 +1803,227 @@ setInterval(checkAlerts,60000);
 setInterval(()=>{ // auto-refresh watchlist tiap 60 dtk selama tabnya kebuka
   if(!document.hidden&&watch.length&&$('p-watch').classList.contains('show'))refreshWatch();
 },60000);
+/* ============ TAB CEK — Gate · Sinyal · Risk ============ */
+(function(){
+  if(!$('p-cek'))return;
+  const GATE=[
+    {id:'mint',crit:1,q:'Mint authority dicabut?',h:'Belum = dev cetak supply tak terbatas. <b>RugCheck/Solscan</b>.'},
+    {id:'freeze',crit:1,q:'Freeze authority dicabut?',h:'Masih aktif = honeypot, gak bisa jual. <b>RugCheck</b>.'},
+    {id:'lp',crit:1,q:'LP burned / locked?',h:'Dev pegang LP = bisa rug. <b>RugCheck</b>.'},
+    {id:'top10',w:3,q:'Top-10 holder < ~30%?',h:'Konsentrasi tinggi = gampang didump. <b>GMGN/RugCheck</b>.'},
+    {id:'devsafe',w:3,q:'Dev belum dump & holding wajar?',h:'Dev jual / pegang puluhan % = merah. <b>GMGN</b> (manual).'},
+    {id:'camatch',w:2,q:'CA cocok (bukan copycat)?',h:'Cocokin dgn channel resmi. Manual.'}
+  ];
+  const SIGNAL=[
+    {id:'smart_in',w:4,q:'Smart money lagi masuk?',h:'Wallet profit/KOL beli. Sinyal terkuat. <b>GMGN</b> (manual).'},
+    {id:'smart_hold',w:3,q:'Smart money belum exit?',h:'Udah keluar = lo telat. <b>GMGN</b> (manual).'},
+    {id:'vol_surge',w:3,q:'Volume meledak (1j vs 6j)?',h:'Spike volume, bukan flat/sekarat.'},
+    {id:'buy_press',w:3,q:'Buy pressure dominan?',h:'Buys > sells, lebih banyak masuk.'},
+    {id:'holder_growth',w:3,q:'Holder tumbuh cepat & organik?',h:'Naik tajam, bukan 1 wallet dipecah. <b>GMGN</b> (manual).'},
+    {id:'mcap_tier',w:3,q:'Market cap di sweet spot?',h:'Momentum tier > FOMO di pucuk >$15M.'},
+    {id:'catalyst',w:2,q:'Ada katalis (fresh/graduate)?',h:'Baru migrate ke Raydium / likuiditas fresh.'},
+    {id:'meta_fit',w:2,q:'Naratif nyambung meta panas?',h:'Cocok meta jalan (AI agent dll). Manual.'},
+    {id:'structure',w:2,q:'Ada struktur, bukan vertikal?',h:'Konsolidasi/higher-low. Manual.'}
+  ];
+  const LINK={gmgn:'https://gmgn.ai/sol/token/',rug:'https://rugcheck.xyz/tokens/',dex:'https://dexscreener.com/solana/',sol:'https://solscan.io/token/',pump:'https://pump.fun/'};
+  const LBL={gmgn:'GMGN',rug:'RugCheck',dex:'DexScreener',sol:'Solscan',pump:'pump.fun'};
+  const st={}; [...GATE,...SIGNAL].forEach(it=>st[it.id]='unk');
+  const crit=GATE.filter(i=>i.crit).map(i=>i.id);
+  let cur={ca:'',sym:'',net:'solana',price:0}, conv={c:'—',m:0,blk:1};
+
+  function rowHTML(it){
+    return '<div class="gk-item'+(it.crit?' crit':'')+'" data-row="'+it.id+'">'
+      +'<div class="gk-main"><div class="gk-q"><span>'+it.q+'</span><span class="gk-w">'+(it.w?'w'+it.w:'deal')+'</span><span class="ab-'+it.id+'"></span></div>'
+      +'<div class="gk-h">'+it.h+' <span class="gk-av av-'+it.id+'"></span></div></div>'
+      +'<div class="gk-tri" data-id="'+it.id+'"><button data-v="pass">✓</button><button data-v="fail">✗</button><button data-v="unk" class="on">?</button></div></div>';
+  }
+  $('gk-gate-list').innerHTML=GATE.map(rowHTML).join('');
+  $('gk-sig-list').innerHTML=SIGNAL.map(rowHTML).join('');
+
+  function setChk(id,v,auto,txt){
+    st[id]=v;
+    const tri=document.querySelector('.gk-tri[data-id="'+id+'"]');
+    tri.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+    document.querySelector('.gk-item[data-row="'+id+'"]').classList.toggle('au',!!auto);
+    document.querySelector('.ab-'+id).innerHTML=auto?'<span class="gk-ab">auto</span>':'';
+    document.querySelector('.av-'+id).textContent=(auto&&txt)?('→ '+txt):'';
+    compute();
+  }
+  document.querySelectorAll('.gk-tri').forEach(tri=>tri.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;setChk(tri.dataset.id,b.dataset.v,false,'');
+  }));
+
+  function band(s){
+    if(s>=75)return{col:'var(--long)',l:'Sinyal Kuat',c:'Kuat',m:1};
+    if(s>=50)return{col:'var(--wait)',l:'Sinyal OK',c:'Sedang',m:.6};
+    if(s>=25)return{col:'#FF9A4D',l:'Sinyal Lemah · watchlist',c:'Lemah',m:.3};
+    return{col:'var(--short)',l:'No signal · skip',c:'—',m:0};
+  }
+  const NAMES={mint:'mint authority',freeze:'freeze authority',lp:'LP lock',top10:'top-10 holder',devsafe:'dev',camatch:'CA match',
+    smart_in:'smart money masuk',smart_hold:'smart money hold',vol_surge:'volume',buy_press:'buy pressure',holder_growth:'holder growth',mcap_tier:'market cap',catalyst:'katalis',meta_fit:'meta',structure:'struktur'};
+  function compute(){
+    const gateFail=crit.some(id=>st[id]==='fail');
+    const gateClear=crit.every(id=>st[id]==='pass');
+    let aw=0,pw=0,tot=0; SIGNAL.forEach(it=>{tot+=it.w;const v=st[it.id];if(v==='unk')return;aw+=it.w;if(v==='pass')pw+=it.w});
+    const s=aw?Math.round(pw/aw*100):0, comp=Math.round(aw/tot*100);
+    const gp=$('gk-gate'),vl=$('gk-vlabel'),fl=$('gk-fill'),sc=$('gk-score');
+
+    // --- meter + pill (kekuatan sinyal) ---
+    if(gateFail){gp.textContent='GATE TERKUNCI';gp.className='gk-pill blk';
+      fl.style.width='100%';fl.style.background='var(--short)';sc.innerHTML='✕';sc.style.color='var(--short)';
+      vl.textContent='RUG RISK';vl.style.color='var(--short)';}
+    else{gp.textContent=gateClear?'GATE TERBUKA':'GATE ?';gp.className='gk-pill'+(gateClear?' open':'');
+      if(aw===0){vl.textContent='Sinyal belum dinilai';vl.style.color='var(--muted)';fl.style.width='0';sc.innerHTML='—<small>/100</small>';sc.style.color='var(--text)';}
+      else{const b=band(s);vl.textContent=b.l;vl.style.color=b.col;fl.style.width=Math.max(s,3)+'%';fl.style.background=b.col;sc.innerHTML=s+'<small>/100</small>';sc.style.color='var(--text)';}
+    }
+
+    // --- VONIS: boleh beli atau nggak ---
+    const failNames=crit.filter(id=>st[id]==='fail').map(id=>NAMES[id]);
+    let dec;
+    if(gateFail) dec={l:'❌ JANGAN BELI',sub:'Gagal dealbreaker: '+failNames.join(', ')+'. Risiko rug/honeypot — skip.',bg:'rgba(255,92,114,.14)',bd:'var(--short)',col:'#FFB3BE',m:0};
+    else if(!gateClear) dec={l:'⚠️ DATA KURANG',sub:'Gate belum lolos. Pastikan mint/freeze/LP aman dulu (Scan, atau isi manual).',bg:'rgba(245,181,68,.12)',bd:'var(--wait)',col:'#F5C97A',m:0};
+    else if(aw===0) dec={l:'⏸️ NILAI SINYAL DULU',sub:'Gate lolos. Scan / isi sinyal biar vonis beli muncul.',bg:'var(--surface2)',bd:'var(--line)',col:'var(--muted)',m:0};
+    else if(s>=70) dec=(comp>=55)
+        ? {l:'✅ BOLEH BELI',sub:'Gate lolos + sinyal kuat. Size sesuai konviksi di bawah.',bg:'rgba(45,212,167,.16)',bd:'var(--long)',col:'#7FE9CE',m:1}
+        : {l:'✅ BOLEH — SIZE KECIL',sub:'Sinyal kuat tapi data baru '+comp+'%. Masuk kecil dulu, lengkapi smart money.',bg:'rgba(45,212,167,.10)',bd:'var(--long)',col:'#7FE9CE',m:.5};
+    else if(s>=45) dec={l:'🟡 BOLEH, HATI-HATI',sub:'Sinyal sedang. Size kecil, stop ketat, jangan all-in.',bg:'rgba(245,181,68,.12)',bd:'var(--wait)',col:'#F5C97A',m:.5};
+    else if(s>=25) dec={l:'⏸️ TUNGGU / WATCHLIST',sub:'Sinyal lemah. Pantau, jangan entry sekarang.',bg:'rgba(255,154,77,.12)',bd:'#FF9A4D',col:'#FFC089',m:0};
+    else dec={l:'🚫 SKIP',sub:'Gak ada sinyal. Cari token lain.',bg:'rgba(255,92,114,.10)',bd:'var(--short)',col:'#FFB3BE',m:0};
+
+    const db=$('gk-decision');db.textContent=dec.l;db.style.background=dec.bg;db.style.borderColor=dec.bd;db.style.color=dec.col;
+    $('gk-decsub').textContent=dec.sub;
+
+    // --- alasan ringkas ---
+    const why=[];
+    if(gateFail)why.push('❌ Gate gagal: '+failNames.join(', '));
+    else if(gateClear)why.push('✅ Gate lolos — mint/freeze/LP aman');
+    else why.push('⚠️ Gate belum lengkap — cek mint/freeze/LP (dealbreaker)');
+    const flowP=['vol_surge','buy_press','mcap_tier','structure'].filter(id=>st[id]==='pass').map(id=>NAMES[id]);
+    const flowF=['vol_surge','buy_press','mcap_tier','structure'].filter(id=>st[id]==='fail').map(id=>NAMES[id]);
+    if(flowP.length)why.push('✅ Flow oke: '+flowP.join(', '));
+    if(flowF.length)why.push('❌ Flow lemah: '+flowF.join(', '));
+    if(st['smart_in']==='pass')why.push('✅ Smart money masuk');
+    else if(st['smart_in']==='unk')why.push('⚠️ Smart money belum dicek — buka GMGN (chip di atas) → tab Traders');
+    const miss=SIGNAL.filter(it=>st[it.id]==='unk').length;
+    if(miss)why.push('ℹ️ '+miss+' cek manual kosong · kelengkapan data '+comp+'%');
+    $('gk-reasons').innerHTML=why.slice(0,5).map(w=>'<div class="gk-why">'+w+'</div>').join('');
+
+    conv={c:(dec.m>=1?'Kuat':dec.m>=.5?'Sedang':'—'),m:dec.m,blk:gateFail?1:0,col:dec.col};
+    sizing();
+  }
+
+  const fmtR=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
+  function sizing(){
+    const bk=+$('gk-bk').value||0,rp=+$('gk-risk').value,sp=+$('gk-stop').value,cp=+$('gk-cap').value;
+    $('gk-bkL').textContent=fmtR(bk);$('gk-riskL').textContent=rp+'%';$('gk-stopL').textContent=sp+'%';$('gk-capL').textContent=cp+'%';
+    const ct=$('gk-conv');ct.textContent=conv.blk?'TERKUNCI':conv.c;ct.style.color=conv.blk?'var(--short)':(conv.col||'var(--muted)');
+    const eff=bk*(rp/100)*conv.m;let pos=sp>0?eff/(sp/100):0;const cap=bk*(cp/100);let capd=0;
+    if(pos>cap){pos=cap;capd=1}
+    if(conv.m===0){$('gk-eff').textContent='—';$('gk-pos').textContent=conv.blk?'Rp0 · skip':'Rp0';$('gk-capw').style.display='none';return}
+    $('gk-eff').textContent=fmtR(eff);$('gk-pos').textContent=fmtR(pos);$('gk-capw').style.display=capd?'block':'none';
+  }
+  ['gk-bk','gk-risk','gk-stop','gk-cap'].forEach(id=>$(id).addEventListener('input',sizing));
+
+  const caValid=v=>v.length>=32&&/^[1-9A-HJ-NP-Za-km-z]+$/.test(v);
+  function drawLinks(v,ok){
+    $('gk-links').innerHTML=Object.keys(LINK).map(k=>ok
+      ?'<a class="chip" style="text-decoration:none" target="_blank" rel="noopener" href="'+LINK[k]+v+'">↗ '+LBL[k]+'</a>'
+      :'<span class="chip" style="opacity:.4">'+LBL[k]+'</span>').join('');
+  }
+  $('gk-ca').addEventListener('input',e=>{const v=e.target.value.trim(),ok=caValid(v);$('gk-scan').disabled=!ok;drawLinks(v,ok)});
+
+  const usd=n=>{if(n==null)return'—';n=+n;if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'k';return'$'+n.toFixed(n<1?6:2)};
+  const ageS=ms=>{if(!ms)return'—';const h=(Date.now()-ms)/36e5;return h<24?h.toFixed(1)+'j':(h/24).toFixed(1)+'hr'};
+
+  async function scan(){
+    const mint=$('gk-ca').value.trim();if(!caValid(mint))return;
+    $('gk-scan').disabled=1;$('gk-scan').textContent='⏳ Scan…';$('gk-status').textContent='DexScreener…';
+    let dx=0;
+    try{const r=await fetchT('https://api.dexscreener.com/latest/dex/tokens/'+mint,null,12000);const j=await r.json();
+      const ps=(j.pairs||[]).filter(p=>p.chainId==='solana');if(!ps.length)throw 0;
+      const p=ps.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];dx=1;applyDex(p);
+    }catch(e){$('gk-status').innerHTML='<span style="color:var(--wait)">DexScreener gagal / no pair</span>'}
+    $('gk-status').innerHTML=(dx?'<span style="color:var(--long)">DexScreener ✓</span>':'')+' · RugCheck…';
+    try{const r=await fetchT('https://api.rugcheck.xyz/v1/tokens/'+mint+'/report',null,12000);
+      if(!r.ok)throw 0;applyRug(await r.json());
+      $('gk-status').innerHTML=(dx?'<span style="color:var(--long)">DexScreener ✓</span> · ':'')+'<span style="color:var(--long)">RugCheck ✓</span>';
+    }catch(e){$('gk-status').innerHTML=(dx?'<span style="color:var(--long)">DexScreener ✓</span> · ':'')+'<span style="color:var(--wait)">RugCheck diblok (CORS) — gate isi manual</span>'}
+    $('gk-scan').disabled=0;$('gk-scan').textContent='🔄 Scan ulang';
+  }
+  function applyDex(p){
+    const liq=p.liquidity?.usd,mc=p.marketCap||p.fdv,price=+p.priceUsd;
+    const v1=p.volume?.h1||0,v6=p.volume?.h6||0,tx=p.txns?.h1||{},by=tx.buys||0,sl=tx.sells||0;
+    if(price)cur.price=price;cur.ca=$('gk-ca').value.trim();if(!cur.sym)cur.sym=(p.baseToken?.symbol||'').toUpperCase();
+    $('gk-strip').style.display='grid';
+    $('gk-strip').innerHTML=
+      '<div class="stat"><div class="k">Harga</div><div class="v">'+usd(price)+'</div></div>'
+     +'<div class="stat"><div class="k">Market Cap</div><div class="v">'+usd(mc)+'</div></div>'
+     +'<div class="stat"><div class="k">Likuiditas</div><div class="v">'+usd(liq)+'</div></div>'
+     +'<div class="stat"><div class="k">Vol 1j</div><div class="v">'+usd(v1)+'</div></div>'
+     +'<div class="stat"><div class="k">Buy/Sell 1j</div><div class="v '+(by>sl?'g':(sl>by?'r':''))+'">'+by+'/'+sl+'</div></div>'
+     +'<div class="stat"><div class="k">Umur pair</div><div class="v">'+ageS(p.pairCreatedAt)+'</div></div>';
+    if(v6>0){const r=v1/(v6/6);
+      if(r>=1.8)setChk('vol_surge','pass',1,r.toFixed(1)+'× rata2');
+      else if(r<=0.6)setChk('vol_surge','fail',1,'sekarat '+r.toFixed(1)+'×');
+      else setChk('vol_surge','unk',1,'netral '+r.toFixed(1)+'×');}
+    const tot=by+sl;if(tot>=10){const r=by/tot;
+      if(r>=.55)setChk('buy_press','pass',1,Math.round(r*100)+'% buy');
+      else if(r<=.45)setChk('buy_press','fail',1,Math.round(r*100)+'% buy');
+      else setChk('buy_press','unk',1,Math.round(r*100)+'% buy');}
+    if(mc){if(mc>=5e4&&mc<=5e6)setChk('mcap_tier','pass',1,usd(mc)+' sweet spot');
+      else if(mc>15e6)setChk('mcap_tier','fail',1,usd(mc)+' telat');
+      else setChk('mcap_tier','unk',1,usd(mc));}
+    if(p.pairCreatedAt){const h=(Date.now()-p.pairCreatedAt)/36e5;if(h<24&&(liq||0)>=15e3)setChk('catalyst','pass',1,'fresh '+ageS(p.pairCreatedAt));}
+    const pc1=p.priceChange?.h1;
+    if(typeof pc1==='number'){
+      if(pc1>60)setChk('structure','fail',1,'+'+pc1.toFixed(0)+'% 1j (vertikal)');
+      else if(pc1>=-20&&pc1<=25)setChk('structure','pass',1,(pc1>=0?'+':'')+pc1.toFixed(0)+'% 1j (tenang)');
+      else setChk('structure','unk',1,(pc1>=0?'+':'')+pc1.toFixed(0)+'% 1j');
+    }
+  }
+  function applyRug(d){
+    const ma=d.mintAuthority??d.token?.mintAuthority;setChk('mint',(ma==null||ma==='')?'pass':'fail',1,(ma==null||ma==='')?'dicabut':'aktif');
+    const fa=d.freezeAuthority??d.token?.freezeAuthority;setChk('freeze',(fa==null||fa==='')?'pass':'fail',1,(fa==null||fa==='')?'dicabut':'aktif');
+    const lp=d.markets?.[0]?.lp?.lpLockedPct;
+    if(typeof lp==='number'){if(lp>=90)setChk('lp','pass',1,lp.toFixed(0)+'% lock');else if(lp<50)setChk('lp','fail',1,lp.toFixed(0)+'% lock');else setChk('lp','unk',1,lp.toFixed(0)+'% lock');}
+    const th=d.topHolders;
+    if(Array.isArray(th)&&th.length){let sum=th.filter(h=>!h.isLP).slice(0,10).reduce((a,h)=>a+(typeof h.pct==='number'?h.pct:0),0);
+      if(sum>0){if(sum<30)setChk('top10','pass',1,sum.toFixed(0)+'%');else if(sum>50)setChk('top10','fail',1,sum.toFixed(0)+'%');else setChk('top10','unk',1,sum.toFixed(0)+'%');}}
+    // dev: dari creator balance / risk flag RugCheck
+    const sup=d.token?.supply||d.supply, cbRaw=d.creatorBalance??d.creator_balance;
+    const cb=(typeof cbRaw==='number'&&sup)?(cbRaw/sup*100):null;
+    const risks=Array.isArray(d.risks)?d.risks:[];
+    const devRisk=risks.find(x=>/creator|owner|insider|sniper/i.test(x.name||'')&&/(high|danger|warn)/i.test(((x.level||'')+(x.score||''))+''));
+    if(cb!=null){
+      if(cb<5)setChk('devsafe','pass',1,'dev '+cb.toFixed(1)+'%');
+      else if(cb>15)setChk('devsafe','fail',1,'dev '+cb.toFixed(0)+'%');
+      else setChk('devsafe','unk',1,'dev '+cb.toFixed(0)+'%');
+    } else if(devRisk) setChk('devsafe','fail',1,'flag: '+(devRisk.name||'creator'));
+    else setChk('devsafe','pass',1,'RugCheck: no dev flag');
+  }
+
+  window.gkLoad=function(ca,sym,net,price){
+    cur={ca:ca||'',sym:(sym||'').toUpperCase(),net:net||'solana',price:+price||0};
+    [...GATE,...SIGNAL].forEach(it=>setChk(it.id,'unk',0,''));
+    swTab('cek');
+    $('gk-ca').value=ca||'';const ok=caValid((ca||'').trim());$('gk-scan').disabled=!ok;drawLinks((ca||'').trim(),ok);
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(ok)scan();
+  };
+  $('gk-scan').addEventListener('click',scan);
+  $('gk-reset').addEventListener('click',()=>[...GATE,...SIGNAL].forEach(it=>setChk(it.id,'unk',0,'')));
+  $('gk-save').addEventListener('click',()=>{
+    const ca=$('gk-ca').value.trim();if(!ca){toast('Tempel CA dulu');return}
+    addWatch(cur.sym||('MEME'+ca.slice(0,4)),'meme',ca,cur.net||'solana');
+  });
+  $('gk-alert').addEventListener('click',()=>{
+    if(!cur.price){toast('Scan dulu biar dapat harga');return}
+    alerts.push({sym:cur.sym||'MEME',type:'meme',addr:$('gk-ca').value.trim(),up:+(cur.price*1.4).toPrecision(6),dn:+(cur.price*0.8).toPrecision(6)});
+    askNotif();saveAlerts();toast('🔔 Alert TP1/SL dipasang');
+  });
+  compute();
+})();
+
 drawAlerts();
 drawJournal();
 drawWatch();
